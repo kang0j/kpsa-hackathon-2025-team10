@@ -76,8 +76,8 @@ model User {
   email                String    @unique
   password             String
   name                 String?
-  birthdate            DateTime?
-  gender               Gender?
+  // birthdate            DateTime?
+  // gender               Gender?
   rewardPoints         Int       @default(0)
   
   // 레벨, 경험치, 랭킹 관련 필드 추가
@@ -164,6 +164,7 @@ model TransactionItem {
 
   @@map("transaction_items")
 }
+
 
 // 소비 항목 카테고리
 model Category {

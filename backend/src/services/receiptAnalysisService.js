@@ -3,7 +3,7 @@
  * (신규 파일)
  * OpenAI API를 호출하여 영수증을 분석하는 핵심 AI 로직을 담당하는 모듈입니다.
  */
-import { OpenAI } from 'openai';
+const { OpenAI } = require('openai');
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -64,8 +64,7 @@ The **items** array contains information for each item on the receipt.
 }
 
 `
-
-export async function analyzeReceipt(base64Image, mimeType) {
+async function analyzeReceipt(base64Image, mimeType) {
   console.log('OpenAI API 호출 시작 (서비스)');
   const response = await openai.chat.completions.create({
     model: 'gpt-4o',
@@ -98,3 +97,7 @@ export async function analyzeReceipt(base64Image, mimeType) {
   const rawJson = response.choices[0].message.content;
   return JSON.parse(rawJson);
 }
+
+module.exports = {
+  analyzeReceipt,
+};

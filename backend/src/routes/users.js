@@ -25,16 +25,6 @@ const bcrypt = require('bcryptjs');
  *           type: string
  *           description: 사용자 이름
  *           example: "홍길동"
- *         birthdate:
- *           type: string
- *           format: date-time
- *           description: 사용자 생년월일
- *           example: "1990-01-01T00:00:00.000Z"
- *         gender:
- *           type: string
- *           enum: [MALE, FEMALE, OTHER]
- *           description: 사용자 성별
- *           example: "MALE"
  *         rewardPoints:
  *           type: integer
  *           description: 사용자 리워드 포인트
@@ -74,19 +64,10 @@ const bcrypt = require('bcryptjs');
  *         name:
  *           type: string
  *           description: 사용자 이름
- *         birthdate:
- *           type: string
- *           format: date
- *           description: 사용자 생년월일 (YYYY-MM-DD)
- *         gender:
- *           type: string
- *           enum: [MALE, FEMALE, OTHER]
  *       example:
  *         email: "newuser@example.com"
  *         password: "password123"
  *         name: "김철수"
- *         birthdate: "1995-05-15"
- *         gender: "MALE"
  */
 
 /**
@@ -190,16 +171,8 @@ const bcrypt = require('bcryptjs');
  *             properties:
  *               name:
  *                 type: string
- *               birthdate:
- *                 type: string
- *                 format: date
- *               gender:
- *                 type: string
- *                 enum: [MALE, FEMALE, OTHER]
  *             example:
  *               name: "이순신"
- *               birthdate: "1991-02-10"
- *               gender: "MALE"
  *     responses:
  *       200:
  *         description: 성공적으로 사용자 정보를 수정했습니다.
@@ -240,7 +213,7 @@ const bcrypt = require('bcryptjs');
 router.get('/', async (req, res) => {
   try {
     const users = await prisma.user.findMany({
-      select: { id: true, email: true, name: true, birthdate: true, gender: true, rewardPoints: true, level: true, exp: true, createdAt: true, updatedAt: true }
+      select: { id: true, email: true, name: true, rewardPoints: true, level: true, exp: true, createdAt: true, updatedAt: true }
     });
     res.status(200).json(users);
   } catch (error) {
@@ -255,7 +228,7 @@ router.get('/:id', async (req, res) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id },
-      select: { id: true, email: true, name: true, birthdate: true, gender: true, rewardPoints: true, level: true, exp: true, createdAt: true, updatedAt: true }
+      select: { id: true, email: true, name: true, rewardPoints: true, level: true, exp: true, createdAt: true, updatedAt: true }
     });
     if (!user) return res.status(404).json({ error: '사용자를 찾을 수 없습니다.' });
     res.status(200).json(user);
@@ -268,13 +241,13 @@ router.get('/:id', async (req, res) => {
 
 
 router.post('/', async (req, res) => {
-  const { email, password, name, birthdate, gender } = req.body;
+  const { email, password, name } = req.body;
   if (!email || !password) return res.status(400).json({ error: '이메일과 비밀번호는 필수입니다.' });
 
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = await prisma.user.create({
-      data: { email, password: hashedPassword, name, birthdate: birthdate ? new Date(birthdate) : null, gender },
+      data: { email, password: hashedPassword, name },
     });
     const { password: _, ...userWithoutPassword } = newUser;
     res.status(201).json(userWithoutPassword);
@@ -288,11 +261,11 @@ router.post('/', async (req, res) => {
 
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
-  const { name, birthdate, gender } = req.body;
+  const { name } = req.body;
   try {
     const updatedUser = await prisma.user.update({
       where: { id },
-      data: { name, birthdate: birthdate ? new Date(birthdate) : undefined, gender },
+      data: { name },
     });
     const { password, ...userWithoutPassword } = updatedUser;
     res.status(200).json(userWithoutPassword);

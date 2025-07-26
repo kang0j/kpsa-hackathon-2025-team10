@@ -18,7 +18,7 @@ router.use('/transactions', transactions);
 router.use('/rewards', rewards);
 router.use('/consultations', consultations);
 router.use('/login', login);
-router.use('./recipets', reciepts)
+router.use('./recipets', receipts)
 // router.use('/recomends', recomends)
 
 
