@@ -1,3 +1,5 @@
+import React from 'react';
+import { Receipt, History, Heart } from "lucide-react";
 import BottomTab from "./BottomTab";
 
 export default function HomeScreen({
@@ -5,11 +7,22 @@ export default function HomeScreen({
 }: {
   onTabChange: (tab: string) => void;
 }) {
+  // 현재 날짜 가져오기
+  const getCurrentDateString = () => {
+    const now = new Date();
+    const month = now.getMonth() + 1;
+    const date = now.getDate();
+    const dayNames = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'];
+    const dayName = dayNames[now.getDay()];
+    
+    return `${month}월 ${date}일 ${dayName}`;
+  };
+
   return (
     <div className="flex flex-col max-h-screen pb-20 overflow-hidden">
       <div className="p-4 text-center">
         <p className="text-sm">홍길동님, 안녕하세요</p>
-        <p className="text-xs text-gray-500">12월 3일 금요일</p>
+        <p className="text-xs text-gray-500">{getCurrentDateString()}</p>
       </div>
 
       <div className="p-4 mx-4 mb-4 bg-gradient-to-r from-sky-200 to-blue-200 rounded-2xl">
@@ -40,21 +53,43 @@ export default function HomeScreen({
         <div className="text-xs text-gray-500">근처 500m</div>
       </div>
 
+      {/* Updated Button Grid */}
       <div className="grid grid-cols-2 gap-4 px-4 mb-20">
-        <div className="bg-blue-400 text-white rounded-xl p-4 flex items-center justify-center text-lg font-bold min-h-[90px]">
-          영수증 인증하기
+        {/* 영수증 인증하기 - Large Left Button */}
+        <div className="col-span-1 row-span-2 relative">
+          <div className="w-full h-48 bg-gradient-to-l from-blue-400 to-blue-600 rounded-xl cursor-pointer overflow-hidden relative">
+            {/* Background Icon */}
+            <div className="absolute top-4 right-4 opacity-20">
+              <Receipt className="w-16 h-16 text-white/60" />
+            </div>
+            {/* Text */}
+            <div className="absolute bottom-6 left-4 text-white text-lg font-bold">
+              영수증<br/>인증하기
+            </div>
+          </div>
         </div>
-        <div
-          className="bg-green-400 rounded-xl p-4 flex items-center justify-center text-white font-semibold min-h-[90px] cursor-pointer"
+
+        {/* 소비내역 - Top Right Button */}
+        <div 
+          className="bg-green-400 rounded-xl p-4 flex items-center justify-center text-white font-semibold min-h-[90px] cursor-pointer relative overflow-hidden"
           onClick={() => onTabChange("history")}
         >
-          소비내역
+          {/* Background Icon */}
+          <div className="absolute top-2 right-2 opacity-30">
+            <History className="w-8 h-8 text-white/60" />
+          </div>
+          {/* Text */}
+          <span className="absolute bottom-3 left-4 text-white text-base font-bold">소비내역</span>
         </div>
-        <div className="bg-sky-300 rounded-xl p-4 flex items-center justify-center text-white font-semibold min-h-[90px]">
-          케어
-        </div>
-        <div className="bg-gray-100 rounded-xl p-4 border flex items-center justify-center text-gray-500 font-semibold min-h-[90px]">
-          + 추가 예정
+
+        {/* 케어 - Bottom Right Button */}
+        <div className="bg-sky-300 rounded-xl p-4 flex items-center justify-center text-white font-semibold min-h-[90px] cursor-pointer relative overflow-hidden">
+          {/* Background Icon */}
+          <div className="absolute top-2 right-2 opacity-30">
+            <Heart className="w-8 h-8 text-white/60" />
+          </div>
+          {/* Text */}
+          <span className="absolute bottom-3 left-4 text-white text-base font-bold">케어</span>
         </div>
       </div>
 
