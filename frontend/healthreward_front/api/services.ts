@@ -58,11 +58,31 @@ export interface ReceiptUploadResponse {
   transaction: Transaction;
 }
 
+export interface SupplementItem {
+  제품명: string;
+  설명: string;
+  링크: string;
+}
+
+export interface SupplementRecommendation {
+  oneCommand: string;
+  "맞춤 영양제 추천": string[];
+  "ai 추천 사항": string;
+}
+
+export interface SupplementResponse {
+  success: boolean;
+  message: string;
+  data: {
+    recommendation: string; // JSON 문자열
+  };
+}
+
 // API 서비스 함수들
 export const authService = {
   // 회원가입
   signup: async (data: SignupData): Promise<User> => {
-    const response = await apiClient.post('/users', data);
+    const response = await apiClient.post('/api/auth/signup', data);
     return response.data;
   },
 
@@ -116,7 +136,7 @@ export const receiptService = {
     const formData = new FormData();
     formData.append('receiptImage', imageFile);
     
-    const response = await apiClient.post(`/receipts/upload/${userId}`, formData, {
+    const response = await apiClient.post(`/api/receipts/upload/${userId}`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -132,6 +152,38 @@ export const transactionService = {
     return response.data;
   },
 };
+
+export const supplementService = {
+  // 사용자별 영양제 추천 조회
+  getSupplementRecommendation: async (userId: string): Promise<SupplementRecommendation> => {
+    const response = await apiClient.get(`/recommends/supplement/${userId}`);
+    const data: SupplementResponse = response.data;
+    
+    // JSON 문자열에서 ```json과 ``` 마크다운 제거
+    let cleanedRecommendation = data.data.recommendation;
+    
+    // ```json으로 시작하는 경우 제거
+    if (cleanedRecommendation.startsWith('```json\n')) {
+      cleanedRecommendation = cleanedRecommendation.replace('```json\n', '');
+    }
+    
+    // ```으로 끝나는 경우 제거
+    if (cleanedRecommendation.endsWith('\n```')) {
+      cleanedRecommendation = cleanedRecommendation.replace('\n```', '');
+    }
+    
+    // 단순히 ```로 끝나는 경우도 제거
+    if (cleanedRecommendation.endsWith('```')) {
+      cleanedRecommendation = cleanedRecommendation.replace('```', '');
+    }
+    
+    // JSON 문자열을 파싱하여 실제 객체로 변환
+    const recommendation: SupplementRecommendation = JSON.parse(cleanedRecommendation.trim());
+    return recommendation;
+  },
+};
+
+// 일반적인 API 호출 함수
 export const apiService = {
   // GET 요청
   get: async <T>(endpoint: string): Promise<T> => {

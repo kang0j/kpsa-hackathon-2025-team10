@@ -116,16 +116,6 @@ export default function CareScreenPremium({
     },
     {
       id: "2",
-      title: "건강식 배달 15% 할인",
-      discount: 15,
-      type: "percentage",
-      category: "음식배달",
-      validUntil: "2025-08-15",
-      description: "추천 건강식 전용 배달 할인",
-      color: "from-green-100 to-emerald-100 border-green-400",
-    },
-    {
-      id: "3",
       title: "약사 상담료 5,000원 할인",
       discount: 5000,
       type: "fixed",
@@ -531,10 +521,6 @@ export default function CareScreenPremium({
                       <div className="text-xs text-gray-500">할인</div>
                     </div>
                   </div>
-
-                  <button className="w-full py-2 mt-3 font-semibold text-gray-800 transition-all bg-white rounded-lg bg-opacity-80 hover:bg-opacity-100">
-                    🎫 쿠폰 사용하기
-                  </button>
                 </div>
               ))}
             </div>
