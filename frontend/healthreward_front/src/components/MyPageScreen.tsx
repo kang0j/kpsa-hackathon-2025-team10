@@ -64,11 +64,11 @@ export default function MyPageScreen({
 
   // 더미 사용자 데이터 (프리미엄 상태에 따라 plan 값 변경)
   const userProfile: UserProfile = {
-    name: "김건강",
-    email: "healthy@email.com",
-    avatar: "https://placehold.co/100x100",
+    name: localStorage.getItem("userName") || "사용자",
+    email: localStorage.getItem("userEmail") || "example@email.com",
+    avatar: "", // 제거 대상이지만 타입 때문에 일단 빈 문자열 유지
     plan: isPremiumUser ? "premium" : "free",
-    joinDate: "2025-06-15",
+    joinDate: "", // 제거 대상
     healthScore: 87,
     totalExpenses: 2450000,
     healthyExpenses: 1560000,
@@ -130,14 +130,9 @@ export default function MyPageScreen({
     <div className="flex flex-col min-h-screen pb-20 bg-gray-50">
       {/* 프로필 헤더 */}
       <div className="px-6 py-6 pt-8 bg-white">
-        <div className="flex items-center mb-4">
-          <img
-            src={userProfile.avatar}
-            alt="프로필"
-            className="w-20 h-20 mr-4 rounded-full"
-          />
-          <div className="flex-1">
-            <div className="flex items-center mb-1">
+        <div className="flex justify-center mb-4 text-center">
+          <div>
+            <div className="flex items-center justify-end mb-1">
               <h1 className="mr-2 text-xl font-bold text-black">
                 {userProfile.name}
               </h1>
@@ -152,11 +147,7 @@ export default function MyPageScreen({
                 </span>
               )}
             </div>
-            <p className="mb-2 text-sm text-gray-600">{userProfile.email}</p>
-            <p className="text-xs text-gray-500">
-              가입일:{" "}
-              {new Date(userProfile.joinDate).toLocaleDateString("ko-KR")}
-            </p>
+            <p className="text-sm text-gray-600">{userProfile.email}</p>
           </div>
         </div>
 
@@ -412,20 +403,6 @@ export default function MyPageScreen({
         {/* 설정 탭 */}
         {activeTab === "settings" && (
           <div className="space-y-6">
-            {/* 계정 설정 */}
-            <div className="bg-white shadow-sm rounded-xl">
-              <h3 className="p-6 pb-0 text-lg font-bold">계정 설정</h3>
-              <div className="p-6 pt-4 space-y-4">
-                <button className="flex items-center justify-between w-full py-3 border-b border-gray-100">
-                  <div className="flex items-center">
-                    <span className="mr-3 text-xl">👤</span>
-                    <span>프로필 편집</span>
-                  </div>
-                  <span className="text-gray-400">›</span>
-                </button>
-              </div>
-            </div>
-
             {/* 구독 관리 */}
             <div className="bg-white shadow-sm rounded-xl">
               <h3 className="p-6 pb-0 text-lg font-bold">구독 관리</h3>

@@ -20,7 +20,6 @@ export default function App() {
 
   const handleLogin = () => {
     setIsLoggedIn(true);
-    localStorage.setItem("isLoggedIn", "true");
   };
 
   return (
