@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import BottomTab from "./BottomTab";
 
 interface Product {
@@ -34,23 +34,14 @@ export default function StoreScreen({
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
-  const categories: Category[] = [
-    { id: "all", name: "전체", icon: "🏪", count: 24 },
-    { id: "vitamin", name: "비타민", icon: "💊", count: 8 },
-    { id: "protein", name: "단백질", icon: "💪", count: 6 },
-    { id: "mineral", name: "미네랄", icon: "⚡", count: 5 },
-    { id: "omega", name: "오메가", icon: "🐟", count: 3 },
-    { id: "probiotics", name: "유산균", icon: "🦠", count: 2 },
-  ];
-
   const products: Product[] = [
     {
       id: "1",
-      name: "프리미엄 비타민D 3000IU",
-      brand: "헬시라이프",
+      name: "여에스더 비타민D 3000IU",
+      brand: "여에스더",
       price: 24900,
       originalPrice: 32000,
-      image: "https://placehold.co/200x200",
+      image: "/images/products/vitamin-d.png",
       category: "vitamin",
       rating: 4.8,
       reviewCount: 1247,
@@ -62,10 +53,10 @@ export default function StoreScreen({
     },
     {
       id: "2",
-      name: "오메가3 EPA+DHA 고함량",
-      brand: "바이오텍",
+      name: "프로메가 오메가3 듀얼",
+      brand: "종근당",
       price: 45000,
-      image: "https://placehold.co/200x200",
+      image: "/images/products/omega3.png",
       category: "omega",
       rating: 4.9,
       reviewCount: 892,
@@ -79,7 +70,7 @@ export default function StoreScreen({
       brand: "네이처스웨이",
       price: 19900,
       originalPrice: 25000,
-      image: "https://placehold.co/200x200",
+      image: "/images/products/multivitamin.png",
       category: "vitamin",
       rating: 4.6,
       reviewCount: 634,
@@ -89,10 +80,10 @@ export default function StoreScreen({
     },
     {
       id: "4",
-      name: "프로바이오틱스 100억",
-      brand: "굿헬스",
+      name: "100억 프로바이오틱스",
+      brand: "CMG 건강연구소",
       price: 35000,
-      image: "https://placehold.co/200x200",
+      image: "/images/products/probiotics.png",
       category: "probiotics",
       rating: 4.7,
       reviewCount: 445,
@@ -101,11 +92,11 @@ export default function StoreScreen({
     },
     {
       id: "5",
-      name: "식물성 단백질 파우더",
-      brand: "플랜트프로",
+      name: "뉴트리디데이 단백질 파우더",
+      brand: "뉴트리디데이",
       price: 42000,
       originalPrice: 48000,
-      image: "https://placehold.co/200x200",
+      image: "/images/products/protein.png",
       category: "protein",
       rating: 4.5,
       reviewCount: 523,
@@ -118,11 +109,66 @@ export default function StoreScreen({
       name: "마그네슘 + 아연 복합",
       brand: "미네랄플러스",
       price: 18500,
-      image: "https://placehold.co/200x200",
+      image: "/images/products/mineral.png",
       category: "mineral",
       rating: 4.4,
       reviewCount: 267,
       benefits: ["스트레스 완화", "수면 개선", "근육 이완"],
+    },
+  ];
+
+  const categoryCounts = useMemo(() => {
+    const counts: Record<
+      "all" | "vitamin" | "protein" | "mineral" | "omega" | "probiotics",
+      number
+    > = {
+      all: products.length,
+      vitamin: 0,
+      protein: 0,
+      mineral: 0,
+      omega: 0,
+      probiotics: 0,
+    };
+
+    products.forEach((p) => {
+      counts[p.category as keyof typeof counts] =
+        (counts[p.category as keyof typeof counts] || 0) + 1;
+    });
+
+    return counts;
+  }, [products]);
+
+  const categories: Category[] = [
+    { id: "all", name: "전체", icon: "🏪", count: categoryCounts["all"] || 0 },
+    {
+      id: "vitamin",
+      name: "비타민",
+      icon: "💊",
+      count: categoryCounts["vitamin"] || 0,
+    },
+    {
+      id: "protein",
+      name: "단백질",
+      icon: "💪",
+      count: categoryCounts["protein"] || 0,
+    },
+    {
+      id: "mineral",
+      name: "미네랄",
+      icon: "⚡",
+      count: categoryCounts["mineral"] || 0,
+    },
+    {
+      id: "omega",
+      name: "오메가",
+      icon: "🐟",
+      count: categoryCounts["omega"] || 0,
+    },
+    {
+      id: "probiotics",
+      name: "유산균",
+      icon: "🦠",
+      count: categoryCounts["probiotics"] || 0,
     },
   ];
 
@@ -141,12 +187,14 @@ export default function StoreScreen({
     return (
       <div className="flex flex-col min-h-screen bg-white">
         {/* 상품 상세 헤더 */}
-        <div className="flex items-center justify-between p-4 border-b">
-          <button onClick={() => setSelectedProduct(null)} className="text-2xl">
+        <div className="relative flex items-center justify-center p-4 border-b">
+          <button
+            onClick={() => setSelectedProduct(null)}
+            className="absolute text-2xl left-4"
+          >
             ←
           </button>
           <h1 className="text-lg font-bold">상품 상세</h1>
-          <button className="text-2xl">♡</button>
         </div>
 
         {/* 상품 이미지 */}
