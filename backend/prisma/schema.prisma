@@ -1,15 +1,299 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+// =================================
+// Enums (상태 및 타입 정의)
+// =================================
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+// 트랜잭션의 라이프사이클을 나타내는 상태
+enum TransactionStatus {
+  PENDING   // 영수증이 업로드되어 처리 및 대조를 기다리는 상태
+  UNMATCHED // MyData 내역을 찾지 못했거나 총액이 불일치하는 상태
+  MATCHED   // MyData 내역과 성공적으로 대조(일치)된 상태
+  ERROR     // OCR 실패 등 처리 과정에서 오류가 발생한 상태
+}
+
+// 사용자가 교환하는 혜택의 종류
+enum BenefitType {
+  COUPON
+  PRODUCT
+  SERVICE
+}
+
+// 랭킹 시스템 등급
+enum RankingTier {
+  BRONZE
+  SILVER
+  GOLD
+  PLATINUM
+  DIAMOND
+}
+
+enum ConsultationStatus {
+  REQUESTED
+  ACCEPTED
+  COMPLETED
+  CANCELLED
+}
+
+enum SenderType {
+  USER
+  PHARMACIST
+}
+
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+  BLOCKED
+}
+
+enum PartnerType {
+  COMPANY
+  GOVERNMENT
+}
+
+// =================================
+// 사용자 및 인증 관련 모델
+// =================================
+
+model User {
+  id                   String    @id @default(cuid())
+  email                String    @unique
+  password             String
+  name                 String?
+  birthdate            DateTime?
+  gender               Gender?
+  rewardPoints         Int       @default(0)
+  
+  // 레벨, 경험치, 랭킹 관련 필드 추가
+  level                Int         @default(1) // 사용자 레벨
+  exp                  Int         @default(0) // 사용자 경험치 (EXP)
+  rankingTier          RankingTier @default(BRONZE) // 사용자 랭킹 등급
+
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  // 사용자와의 관계
+  transactions         Transaction[]
+  rewardPointHistories RewardPointHistory[]
+  consultations        Consultation[]
+  sentFriendRequests   Friendship[]         @relation("SentFriendships")
+  receivedFriendRequests Friendship[]       @relation("ReceivedFriendships")
+  goals                Goal[]
+  userBenefits         UserBenefit[]
+
+  @@map("users")
+}
+
+// =================================
+// 소비 및 거래 관련 모델
+// =================================
+
+// MyData 원본 데이터 (검증용)
+model MyDataTransaction {
+  id                   String    @id @default(cuid())
+  userIdentifier       String
+  cardCompany          String
+  cardNumberLastFour   String
+  merchantName         String
+  amount               Int
+  transactionTimestamp DateTime
+  isProcessed          Boolean   @default(false)
+  createdAt            DateTime  @default(now())
+
+  verifiedTransaction  Transaction? // 이 MyData로 검증된 영수증 거래
+
+  @@index([userIdentifier])
+  @@map("mydata_transactions")
+}
+
+// 영수증 기반 상세 거래 내역
+model Transaction {
+  id              String      @id @default(cuid())
+  userId          String
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  storeName       String
+  totalAmount     Int
+  transactionDate DateTime
+
+  status          TransactionStatus @default(PENDING) // MyData 대조 상태
+
+  // 어떤 MyData 트랜잭션으로 검증되었는지 ID 저장
+  verifiedById    String?             @unique
+  verifiedBy      MyDataTransaction?  @relation(fields: [verifiedById], references: [id])
+  
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  
+  items           TransactionItem[]
+  rewardPointHistory RewardPointHistory?
+
+  @@index([userId])
+  @@map("transactions")
+}
+
+// 거래에 포함된 개별 상품
+model TransactionItem {
+  id            String    @id @default(cuid())
+  transactionId String
+  transaction   Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  itemName      String
+  price         Int
+  quantity      Int       @default(1)
+  categoryId    String?
+  category      Category? @relation(fields: [categoryId], references: [id])
+  isHealthy     Boolean   @default(false)
+
+  @@map("transaction_items")
+}
+
+// 소비 항목 카테고리
+model Category {
+  id    String    @id @default(cuid())
+  name  String    @unique
+  items TransactionItem[]
+
+  @@map("categories")
+}
+
+// =================================
+// 리워드 시스템 관련 모델
+// =================================
+
+// 리워드 포인트 적립/사용 내역
+model RewardPointHistory {
+  id            String      @id @default(cuid())
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  points        Int
+  reason        String
+  transactionId String?     @unique
+  transaction   Transaction? @relation(fields: [transactionId], references: [id])
+  createdAt     DateTime    @default(now())
+  
+  @@index([userId])
+  @@map("reward_point_histories")
+}
+
+// 사용자가 교환할 수 있는 혜택(상품, 쿠폰 등)
+model Benefit {
+  id             String      @id @default(cuid())
+  title          String
+  description    String?
+  pointsRequired Int
+  type           BenefitType @default(COUPON)
+  isActive       Boolean     @default(true)
+  partnerId      String?
+  partner        Partner?    @relation(fields: [partnerId], references: [id])
+  userBenefits   UserBenefit[]
+
+  @@map("benefits")
+}
+
+// 사용자가 획득한 혜택
+model UserBenefit {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  benefitId   String
+  benefit     Benefit  @relation(fields: [benefitId], references: [id])
+  claimedAt   DateTime @default(now())
+  usedAt      DateTime?
+  couponCode  String?  @unique
+
+  @@index([userId, benefitId])
+  @@map("user_benefits")
+}
+
+// =================================
+// 기타 모델 (약사 상담, 소셜, 제휴 등)
+// =================================
+
+model Pharmacist {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String
+  name          String
+  licenseNumber String    @unique
+  profile       String?
+  consultations Consultation[]
+
+  @@map("pharmacists")
+}
+
+model Consultation {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id])
+  pharmacistId  String
+  pharmacist    Pharmacist @relation(fields: [pharmacistId], references: [id])
+  status        ConsultationStatus @default(REQUESTED)
+  topic         String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  messages      ConsultationMessage[]
+
+  @@index([userId, pharmacistId])
+  @@map("consultations")
+}
+
+model ConsultationMessage {
+  id             String    @id @default(cuid())
+  consultationId String
+  consultation   Consultation @relation(fields: [consultationId], references: [id], onDelete: Cascade)
+  content        String
+  senderType     SenderType
+  createdAt      DateTime  @default(now())
+
+  @@map("consultation_messages")
+}
+
+model Friendship {
+  userId    String
+  friendId  String
+  status    FriendshipStatus @default(PENDING)
+  createdAt DateTime         @default(now())
+  user      User             @relation("SentFriendships", fields: [userId], references: [id], onDelete: Cascade)
+  friend    User             @relation("ReceivedFriendships", fields: [friendId], references: [id], onDelete: Cascade)
+
+  @@id([userId, friendId])
+  @@map("friendships")
+}
+
+model Goal {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  title       String
+  description String?
+  startDate   DateTime
+  endDate     DateTime
+  isAchieved  Boolean  @default(false)
+
+  @@map("goals")
+}
+
+model Partner {
+  id       String      @id @default(cuid())
+  name     String      @unique
+  type     PartnerType
+  benefits Benefit[]
+
+  @@map("partners")
 }
