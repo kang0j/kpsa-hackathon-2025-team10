@@ -33,9 +33,9 @@ The **items** array contains information for each item on the receipt.
 
 **categoryId**: This is the ID of the category to which the product belongs. It can be left empty for future mapping. (null or an empty string)
 
-**healthyScore**: This is the health score for the product. It is evaluated as an integer between 0-100, with a default value of 0.
+**healthyScore**: This is the health score for the product. It is evaluated as an integer between -5 ~ 5, with a default value of 0.
 
-**commentByAI**: This is a brief comment from the AI about the product. (e.g., "This is a processed food that requires caution against excessive consumption.")
+**commentByAI**: (IN KROEAN) This is a brief comment from the AI about the product. (e.g., "This is a processed food that requires caution against excessive consumption.")(IN KROEAN)
 
 **JSON**
 

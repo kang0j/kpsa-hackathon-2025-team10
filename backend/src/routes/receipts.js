@@ -14,7 +14,7 @@ const upload = multer({ dest: 'uploads/' });
 
 /**
  * @swagger
- * /api/receipts/upload/{id}:
+ * receipts/upload/{id}:
  *   post:
  *     tags:
  *       - "Receipts"

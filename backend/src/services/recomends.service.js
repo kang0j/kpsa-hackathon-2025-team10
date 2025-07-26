@@ -12,27 +12,58 @@ const openai = new OpenAI({
  * @param {string} purchaseList - 구매 목록 문자열
  * @returns {string} 생성된 프롬프트
  */
+
+supplementRecomendation = String.raw`You are a personalized supplement recommendation AI assistant.
+Your primary role is to analyze a user's consumption data and recommend the most suitable supplements from a given list.
+
+**You MUST follow these rules:**
+1.  The output format **MUST BE** a valid JSON object.
+2.  The JSON object **MUST** contain two top-level keys: \`items\` and \`추천 및 독려 메세지\`.
+3.  The \`items\` key **MUST** be an array of objects.
+4.  Each object in the \`items\` array **MUST** have the keys: \`제품명\`, \`설명\`, \`링크\`.
+5.  All recommendations **MUST** be selected from the 'Available Supplements List' provided in the prompt. Do not invent products.
+6.  The \`추천 및 독려 메세지\` should be a personalized and encouraging message based on the user's data.
+7.  **DO NOT** include any text, explanations, or markdown formatting outside of the JSON object. Your entire response must be the JSON itself.
+
+---
+
+**## Example ##**
+
+**[User Input Example]**
+
+* **User Consumption Data:** "일주일에 3-4번은 라면이나 편의점 도시락으로 식사를 해결합니다. 최근 오후만 되면 쉽게 피로하고 무기력함을 느낍니다."
+* **Available Supplements List:**
+    * 제품명: 멀티비타민 플러스, 설명: 18종의 비타민과 미네랄을 한 번에 섭취하여 균형 잡힌 영양을 제공합니다., 링크: https://example.com/multi
+    * 제품명: 오메가3 부스트, 설명: 혈행 개선과 두뇌 건강에 도움을 주는 고순도 오메가3입니다., 링크: https://example.com/omega3
+    * 제품명: 활력 비타민B 컴플렉스, 설명: 에너지 생성에 필수적인 비타민B군 8종을 모두 함유하여 지친 일상에 활력을 더해줍니다., 링크: https://example.com/vitamin_b
+
+**[AI Output Example]**
+\json
+{
+  "items": [
+    {
+      "제품명": "멀티비타민 플러스",
+      "설명": "18종의 비타민과 미네랄을 한 번에 섭취하여 균형 잡힌 영양을 제공합니다.",
+      "링크": "[https://example.com/multi](https://example.com/multi)"
+    },
+    {
+      "제품명": "활력 비타민B 컴플렉스",
+      "설명": "에너지 생성에 필수적인 비타민B군 8종을 모두 함유하여 지친 일상에 활력을 더해줍니다.",
+      "링크": "[https://example.com/vitamin_b](https://example.com/vitamin_b)"
+    }
+  ],
+  "추천 및 독려 메세지": "불규칙한 식사와 피로감으로 고민이시군요. 식사로 부족하기 쉬운 영양을 채워줄 '멀티비타민 플러스'와 일상의 활력을 되찾아 줄 '활력 비타민B 컴플렉스'를 추천해 드립니다. 꾸준한 섭취로 더 건강한 하루를 만들어보세요!"
+}
+`
+
 function createPrompt(recommendationType, purchaseList) {
     const baseInstruction = `당신은 전문 영양사 및 건강 컨설턴트입니다. 다음은 한 사용자의 최근 구매 목록입니다. 이 목록을 바탕으로 구체적이고 실용적인 건강 조언을 한국어로 해주세요. 어조는 친근하고 따뜻하게 해주세요.`;
 
     let specificInstruction = '';
     if (recommendationType === 'food') {
-        specificInstruction = `
-            [음식 기반 조언 가이드라인]
-            1.  전체적인 식습관의 긍정적인 점과 개선점을 요약해주세요.
-            2.  건강 점수가 낮은 음식들의 건강한 대안을 2~3가지 제안해주세요. (예: 과자 -> 견과류, 과일)
-            3.  이 구매 목록을 바탕으로 간단한 주간 식단을 추천해주세요.
-            4.  사용자가 꾸준히 구매하는 건강한 음식이 있다면 칭찬하고 격려해주세요.
-            
-        `;
+        specificInstruction = '';
     } else { // recommendationType === 'supplement'
-        specificInstruction = `
-            [영양제 기반 조언 가이드라인]
-            1.  구매한 영양제 목록을 기반으로 사용자의 건강 관심사를 추측해주세요.
-            2.  현재 식단(음식 구매 내역)을 고려할 때, 추가로 섭취하면 좋을 영양 성분이나 영양제를 추천해주세요.
-            3.  구매한 영양제들의 효능과 올바른 복용법(시간, 식전/식후 등)을 간단히 안내해주세요.
-            4.  과다 복용 시 주의해야 할 점이나 함께 복용하면 좋지 않은 조합이 있다면 알려주세요.
-        `;
+        specificInstruction = supplementRecomendation
     }
 
     return `
