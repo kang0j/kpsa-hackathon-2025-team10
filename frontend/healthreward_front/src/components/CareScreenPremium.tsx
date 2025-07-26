@@ -199,13 +199,7 @@ export default function CareScreenPremium({
     <div className="flex flex-col min-h-screen pb-20 bg-gradient-to-b from-purple-50 to-white">
       {/* 프리미엄 헤더 */}
       <div className="bg-gradient-to-r from-purple-600 to-blue-600 p-4">
-        <div className="flex justify-between items-center text-white">
-          <div className="text-lg font-semibold">9:41</div>
-          <div className="flex items-center space-x-1">
-            <div className="w-4 h-2 bg-white rounded-sm"></div>
-            <div className="w-6 h-3 border border-white rounded-sm bg-white"></div>
-          </div>
-        </div>
+
         <div className="mt-4 flex items-center">
           <span className="text-2xl mr-3">👑</span>
           <div>
