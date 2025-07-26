@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import BottomTab from "./BottomTab";
 
 interface FoodRecommendation {
@@ -21,6 +21,7 @@ interface Pharmacist {
   image: string;
   availableSlots: string[];
   specialties: string[];
+  location: { lat: number; lng: number };
 }
 
 interface Coupon {
@@ -45,6 +46,65 @@ export default function CareScreenPremium({
   const [selectedPharmacist, setSelectedPharmacist] =
     useState<Pharmacist | null>(null);
   const [inCall, setInCall] = useState(false);
+  const [userLocation, setUserLocation] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
+  const [sortedPharmacists, setSortedPharmacists] = useState<Pharmacist[]>([]);
+  const [distances, setDistances] = useState<Record<string, number>>({});
+
+  // 거리 계산 (Haversine 공식)
+  const calculateDistance = (
+    lat1: number,
+    lng1: number,
+    lat2: number,
+    lng2: number
+  ) => {
+    const toRad = (value: number) => (value * Math.PI) / 180;
+    const R = 6371; // Earth radius in km
+    const dLat = toRad(lat2 - lat1);
+    const dLng = toRad(lng2 - lng1);
+    const a =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
+
+  useEffect(() => {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        setUserLocation({ lat: latitude, lng: longitude });
+
+        const newDistances: Record<string, number> = {};
+        const sorted = [...pharmacists].sort((a, b) => {
+          const distA = calculateDistance(
+            latitude,
+            longitude,
+            a.location.lat,
+            a.location.lng
+          );
+          const distB = calculateDistance(
+            latitude,
+            longitude,
+            b.location.lat,
+            b.location.lng
+          );
+          newDistances[a.id] = distA;
+          newDistances[b.id] = distB;
+          return distA - distB;
+        });
+
+        setDistances(newDistances);
+        setSortedPharmacists(sorted);
+      },
+      (error) => {
+        console.warn("위치 정보를 가져올 수 없습니다:", error.message);
+        setSortedPharmacists(pharmacists);
+      }
+    );
+  }, []);
 
   // 더미 데이터
   const foodRecommendations: FoodRecommendation[] = [
@@ -87,9 +147,10 @@ export default function CareScreenPremium({
       experience: "10년 경력",
       rating: 4.9,
       reviewCount: 127,
-      image: "https://placehold.co/80x80",
+      image: "/images/people/pharmacist1.png",
       availableSlots: ["14:00", "15:30", "16:00", "17:30"],
       specialties: ["영양상담", "건강기능식품", "만성질환"],
+      location: { lat: 37.5651, lng: 126.98955 },
     },
     {
       id: "2",
@@ -97,9 +158,10 @@ export default function CareScreenPremium({
       experience: "8년 경력",
       rating: 4.8,
       reviewCount: 89,
-      image: "https://placehold.co/80x80",
+      image: "/images/people/pharmacist2.png",
       availableSlots: ["13:30", "15:00", "16:30"],
       specialties: ["비타민상담", "면역력", "스포츠영양"],
+      location: { lat: 37.5665, lng: 126.978 },
     },
   ];
 
@@ -188,10 +250,9 @@ export default function CareScreenPremium({
   return (
     <div className="flex flex-col min-h-screen pb-20 bg-gradient-to-b from-purple-50 to-white">
       {/* 프리미엄 헤더 */}
-      <div className="bg-gradient-to-r from-purple-600 to-blue-600 p-4">
-
-        <div className="mt-4 flex items-center">
-          <span className="text-2xl mr-3">👑</span>
+      <div className="p-4 bg-gradient-to-r from-purple-600 to-blue-600">
+        <div className="flex items-center mt-4">
+          <span className="mr-3 text-2xl">👑</span>
           <div>
             <h1 className="text-xl font-bold text-white">프리미엄 케어</h1>
             <p className="text-sm text-purple-100">맞춤형 건강 관리 서비스</p>
@@ -404,62 +465,53 @@ export default function CareScreenPremium({
         {/* 상담 탭 */}
         {activeTab === "consultation" && (
           <div>
-            <div className="mb-4">
-              <h2 className="mb-2 text-xl font-bold">전문 약사 상담</h2>
-              <p className="text-sm text-gray-600">
-                실시간 화상 상담으로 정확한 건강 조언을 받으세요
-              </p>
-            </div>
+            <h2 className="mb-2 text-xl font-bold">위치 기반 약사 상담</h2>
+            <p className="mb-4 text-sm text-gray-600">
+              가까운 약사 순으로 정렬됩니다.
+            </p>
 
             <div className="space-y-4">
-              {pharmacists.map((pharmacist) => (
+              {sortedPharmacists.map((pharmacist) => (
                 <div
                   key={pharmacist.id}
-                  className="p-4 bg-white shadow-lg rounded-xl"
+                  className="p-4 bg-white border shadow-md rounded-xl"
                 >
-                  <div className="flex items-center mb-4">
+                  <div className="flex items-center mb-3">
                     <img
                       src={pharmacist.image}
                       alt={pharmacist.name}
                       className="w-16 h-16 mr-4 rounded-full"
                     />
                     <div className="flex-1">
-                      <h3 className="font-bold text-gray-800">
-                        {pharmacist.name}
-                      </h3>
-                      <p className="text-sm text-gray-600">
+                      <h3 className="text-lg font-bold">{pharmacist.name}</h3>
+                      <p className="text-sm text-gray-500">
                         {pharmacist.experience}
                       </p>
-                      <div className="flex items-center mt-1">
-                        <div className="flex text-sm text-yellow-400">
-                          {"★".repeat(Math.floor(pharmacist.rating))}
-                        </div>
-                        <span className="ml-1 text-sm text-gray-500">
-                          {pharmacist.rating} ({pharmacist.reviewCount} 리뷰)
-                        </span>
-                      </div>
+                      {userLocation && distances[pharmacist.id] && (
+                        <p className="mt-1 text-xs text-blue-500">
+                          약 {distances[pharmacist.id].toFixed(1)} km 거리
+                        </p>
+                      )}
                     </div>
                   </div>
 
-                  <div className="mb-3">
-                    <h4 className="mb-2 text-sm font-semibold">전문 분야</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {pharmacist.specialties.map((specialty) => (
+                  <div className="mb-2">
+                    <strong className="text-sm">전문 분야:</strong>
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      {pharmacist.specialties.map((spec) => (
                         <span
-                          key={specialty}
+                          key={spec}
                           className="px-2 py-1 text-xs text-green-700 bg-green-100 rounded"
                         >
-                          {specialty}
+                          {spec}
                         </span>
                       ))}
                     </div>
                   </div>
 
                   <div className="mb-4">
-                    <h4 className="mb-2 text-sm font-semibold">
-                      오늘 상담 가능 시간
-                    </h4>
-                    <div className="grid grid-cols-4 gap-2">
+                    <strong className="text-sm">상담 가능 시간:</strong>
+                    <div className="grid grid-cols-4 gap-2 mt-1">
                       {pharmacist.availableSlots.map((slot) => (
                         <button
                           key={slot}
@@ -473,7 +525,7 @@ export default function CareScreenPremium({
 
                   <button
                     onClick={() => startVideoCall(pharmacist)}
-                    className="w-full py-3 font-semibold text-white bg-green-500 rounded-lg"
+                    className="w-full py-2 font-semibold text-white bg-green-500 rounded-lg"
                   >
                     📞 화상 상담 시작하기
                   </button>
