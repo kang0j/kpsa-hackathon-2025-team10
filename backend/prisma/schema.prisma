@@ -29,20 +29,20 @@ enum TransactionStatus {
 }
 
 // 사용자가 교환하는 혜택의 종류
-enum BenefitType {
+enum goodType {
   COUPON
   PRODUCT
   SERVICE
 }
 
-// 랭킹 시스템 등급
-enum RankingTier {
-  BRONZE
-  SILVER
-  GOLD
-  PLATINUM
-  DIAMOND
-}
+// // 랭킹 시스템 등급
+// enum RankingTier {
+//   BRONZE
+//   SILVER
+//   GOLD
+//   PLATINUM
+//   DIAMOND
+// }
 
 enum ConsultationStatus {
   REQUESTED
@@ -83,7 +83,7 @@ model User {
   // 레벨, 경험치, 랭킹 관련 필드 추가
   level                Int         @default(1) // 사용자 레벨
   exp                  Int         @default(0) // 사용자 경험치 (EXP)
-  rankingTier          RankingTier @default(BRONZE) // 사용자 랭킹 등급
+  // rankingTier          RankingTier @default(BRONZE) // 사용자 랭킹 등급
 
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
@@ -95,7 +95,7 @@ model User {
   sentFriendRequests   Friendship[]         @relation("SentFriendships")
   receivedFriendRequests Friendship[]       @relation("ReceivedFriendships")
   goals                Goal[]
-  userBenefits         UserBenefit[]
+  userGoods         UserGood[]
 
   @@map("users")
 }
@@ -192,33 +192,33 @@ model RewardPointHistory {
 }
 
 // 사용자가 교환할 수 있는 혜택(상품, 쿠폰 등)
-model Benefit {
+model Good {
   id             String      @id @default(cuid())
   title          String
   description    String?
   pointsRequired Int
-  type           BenefitType @default(COUPON)
+  type           goodType @default(COUPON)
   isActive       Boolean     @default(true)
   partnerId      String?
   partner        Partner?    @relation(fields: [partnerId], references: [id])
-  userBenefits   UserBenefit[]
+  userGoods   UserGood[]
 
-  @@map("benefits")
+  @@map("goods")
 }
 
 // 사용자가 획득한 혜택
-model UserBenefit {
+model UserGood {
   id          String   @id @default(cuid())
   userId      String
   user        User     @relation(fields: [userId], references: [id])
-  benefitId   String
-  benefit     Benefit  @relation(fields: [benefitId], references: [id])
+  GoodId   String
+  Good     Good  @relation(fields: [GoodId], references: [id])
   claimedAt   DateTime @default(now())
   usedAt      DateTime?
   couponCode  String?  @unique
 
-  @@index([userId, benefitId])
-  @@map("user_benefits")
+  @@index([userId, GoodId])
+  @@map("user_Goods")
 }
 
 // =================================
@@ -293,7 +293,7 @@ model Partner {
   id       String      @id @default(cuid())
   name     String      @unique
   type     PartnerType
-  benefits Benefit[]
+  Goods Good[]
 
   @@map("partners")
 }
