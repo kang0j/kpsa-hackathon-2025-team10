@@ -35,10 +35,10 @@ export default function MyPageScreen({
 
   // 컴포넌트 마운트 시 localStorage에서 프리미엄 상태 확인
   useEffect(() => {
-    const premiumStatus = localStorage.getItem('isPremiumUser');
-    const startDate = localStorage.getItem('premiumStartDate');
-    
-    if (premiumStatus === 'true') {
+    const premiumStatus = localStorage.getItem("isPremiumUser");
+    const startDate = localStorage.getItem("premiumStartDate");
+
+    if (premiumStatus === "true") {
       setIsPremiumUser(true);
       setPremiumStartDate(startDate);
     }
@@ -48,8 +48,8 @@ export default function MyPageScreen({
   const handleCancelPremium = () => {
     setIsPremiumUser(false);
     setPremiumStartDate(null);
-    localStorage.removeItem('isPremiumUser');
-    localStorage.removeItem('premiumStartDate');
+    localStorage.removeItem("isPremiumUser");
+    localStorage.removeItem("premiumStartDate");
     setShowPlanModal(false);
   };
 
@@ -444,7 +444,7 @@ export default function MyPageScreen({
                       다음 결제일: {getNextPaymentDate()}
                     </p>
                     <div className="flex space-x-3">
-                      <button 
+                      <button
                         onClick={() => setShowPlanModal(true)}
                         className="flex-1 py-2 text-sm font-semibold text-purple-600 bg-white border border-purple-200 rounded-lg"
                       >
@@ -453,7 +453,7 @@ export default function MyPageScreen({
                     </div>
                   </div>
                 ) : (
-                  <div className="p-4 mb-4 bg-gray-50 rounded-lg">
+                  <div className="p-4 mb-4 rounded-lg bg-gray-50">
                     <div className="flex items-center justify-between mb-2">
                       <span className="font-bold text-gray-700">무료 플랜</span>
                       <span className="px-3 py-1 text-xs text-gray-600 bg-gray-200 rounded-full">
@@ -461,10 +461,11 @@ export default function MyPageScreen({
                       </span>
                     </div>
                     <p className="mb-3 text-sm text-gray-600">
-                      프리미엄 플랜으로 업그레이드하여 더 많은 기능을 이용해보세요!
+                      프리미엄 플랜으로 업그레이드하여 더 많은 기능을
+                      이용해보세요!
                     </p>
-                    <button 
-                      onClick={() => onTabChange('care')}
+                    <button
+                      onClick={() => onTabChange("care")}
                       className="w-full py-2 text-sm font-semibold text-white rounded-lg bg-gradient-to-r from-purple-600 to-blue-600"
                     >
                       프리미엄 플랜 시작하기
@@ -477,7 +478,19 @@ export default function MyPageScreen({
             {/* 앱 설정 */}
             <div className="bg-white shadow-sm rounded-xl">
               <div className="p-6 pt-4 space-y-2">
-                <button className="flex items-center justify-between w-full py-3 text-red-600">
+                <button
+                  onClick={() => {
+                    // localStorage 항목 삭제
+                    localStorage.removeItem("isLoggedIn");
+                    localStorage.removeItem("isPremiumUser");
+                    localStorage.removeItem("userId");
+                    localStorage.removeItem("userName");
+
+                    // 로그아웃 후 초기 화면 또는 로그인 화면으로 이동하고 싶다면 아래 코드 추가
+                    window.location.href = "/";
+                  }}
+                  className="flex items-center justify-between w-full py-3 text-red-600"
+                >
                   <div className="flex items-center">
                     <span className="mr-3 text-xl">🚪</span>
                     <span>로그아웃</span>
