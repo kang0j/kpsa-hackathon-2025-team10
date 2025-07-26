@@ -1,64 +1,42 @@
+import { Home, FileText, Heart, ShoppingBag, User } from "lucide-react";
+
+interface BottomTabProps {
+  selected: string;
+  onTabChange: (tab: string) => void;
+}
+
 export default function BottomTab({
   selected,
   onTabChange,
-}: {
-  selected: string;
-  onTabChange: (tab: string) => void;
-}) {
+}: BottomTabProps) {
   const base = "flex flex-col items-center justify-center text-xs w-full";
   const selectedClass = "text-blue-600 font-bold";
 
+  const tabs = [
+    { id: "home", icon: Home, label: "홈" },
+    { id: "history", icon: FileText, label: "소비 내역" },
+    { id: "care", icon: Heart, label: "케어" },
+    { id: "store", icon: ShoppingBag, label: "스토어" },
+    { id: "my", icon: User, label: "MY" },
+  ];
+
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 flex justify-around max-w-sm py-2 mx-auto bg-white border-t">
-      <button
-        onClick={() => onTabChange("home")}
-        className={`${base} ${
-          selected === "home" ? selectedClass : "text-gray-500"
-        }`}
-      >
-        🏠
-        <br />홈
-      </button>
-      <button
-        onClick={() => onTabChange("history")}
-        className={`${base} ${
-          selected === "history" ? selectedClass : "text-gray-500"
-        }`}
-      >
-        📑
-        <br />
-        소비 내역
-      </button>
-      <button
-        onClick={() => onTabChange("care")}
-        className={`${base} ${
-          selected === "care" ? selectedClass : "text-gray-500"
-        }`}
-      >
-        ❤️
-        <br />
-        케어
-      </button>
-      <button
-        onClick={() => onTabChange("store")}
-        className={`${base} ${
-          selected === "store" ? selectedClass : "text-gray-500"
-        }`}
-      >
-        🛍️
-        <br />
-        스토어
-      </button>
-      <button
-        onClick={() => onTabChange("my")}
-        className={`${base} ${
-          selected === "my" ? selectedClass : "text-gray-500"
-        }`}
-      >
-        👤
-        <br />
-        MY
-      </button>
+      {tabs.map((tab) => {
+        const IconComponent = tab.icon;
+        return (
+          <button
+            key={tab.id}
+            onClick={() => onTabChange(tab.id)}
+            className={`${base} ${
+              selected === tab.id ? selectedClass : "text-gray-500"
+            }`}
+          >
+            <IconComponent size={20} className="mb-1" />
+            {tab.label}
+          </button>
+        );
+      })}
     </nav>
   );
 }
