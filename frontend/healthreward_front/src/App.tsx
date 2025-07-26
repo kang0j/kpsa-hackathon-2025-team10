@@ -3,6 +3,9 @@ import LoginForm from "./components/LoginForm";
 import SignupForm from "./components/SignUpForm";
 import HomeScreen from "./components/HomeScreen";
 import HistoryScreen from "./components/HistoryScreen";
+import CareScreen from "./components/CareScreen";
+import MyPageScreen from "./components/MyPageScreen";
+import StoreScreen from "./components/StoreScreen";
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -37,6 +40,12 @@ export default function App() {
             <HomeScreen onTabChange={setSelectedTab} />
           ) : selectedTab === "history" ? (
             <HistoryScreen onTabChange={setSelectedTab} />
+          ) : selectedTab === "care" ? (
+            <CareScreen onTabChange={setSelectedTab} />
+          ) : selectedTab === "my" ? (
+            <MyPageScreen onTabChange={setSelectedTab} />
+          ) : selectedTab === "store" ? (
+            <StoreScreen onTabChange={setSelectedTab} />
           ) : (
             <HomeScreen onTabChange={setSelectedTab} />
           )}
