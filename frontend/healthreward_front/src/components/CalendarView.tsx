@@ -8,12 +8,11 @@ type CalendarViewProps = {
   datePointsData?: { [key: string]: number }; // 날짜별 포인트 데이터
 };
 
-const CalendarView = ({ 
-  selectedDate, 
-  onDateChange, 
-  transactionDates = [], 
+const CalendarView = ({
+  selectedDate,
+  onDateChange,
+  transactionDates = [],
   transactions = [],
-  datePointsData = {}
 }: CalendarViewProps) => {
   // selectedDate를 파싱해서 초기값 설정
   const parseSelectedDate = (dateStr: string) => {
@@ -21,12 +20,16 @@ const CalendarView = ({
     return {
       year: date.getFullYear(),
       month: date.getMonth(),
-      day: date.getDate()
+      day: date.getDate(),
     };
   };
 
-  const { year: initYear, month: initMonth, day: initDay } = parseSelectedDate(selectedDate);
-  
+  const {
+    year: initYear,
+    month: initMonth,
+    day: initDay,
+  } = parseSelectedDate(selectedDate);
+
   const [currentYear, setCurrentYear] = useState(initYear);
   const [currentMonth, setCurrentMonth] = useState(initMonth); // 0~11
   const [selectedDay, setSelectedDay] = useState(initDay);
@@ -82,24 +85,38 @@ const CalendarView = ({
   // 특정 날짜에 거래가 있는지 확인
   const hasTransactionOnDate = (day: number | null) => {
     if (day === null) return false;
-    const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(
+      2,
+      "0"
+    )}-${String(day).padStart(2, "0")}`;
     return transactionDates.includes(dateStr);
   };
 
   // 특정 날짜의 거래 개수와 총 포인트 계산
   const getDateInfo = (day: number | null) => {
     if (day === null) return null;
-    const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-    
-    const dayTransactions = transactions.filter(transaction => {
+    const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(
+      2,
+      "0"
+    )}-${String(day).padStart(2, "0")}`;
+
+    const dayTransactions = transactions.filter((transaction) => {
       const transactionDate = new Date(transaction.transactionDate);
-      const transactionDateStr = `${transactionDate.getFullYear()}-${String(transactionDate.getMonth() + 1).padStart(2, "0")}-${String(transactionDate.getDate()).padStart(2, "0")}`;
+      const transactionDateStr = `${transactionDate.getFullYear()}-${String(
+        transactionDate.getMonth() + 1
+      ).padStart(2, "0")}-${String(transactionDate.getDate()).padStart(
+        2,
+        "0"
+      )}`;
       return transactionDateStr === dateStr;
     });
 
     if (dayTransactions.length === 0) return null;
 
-    const totalPoints = dayTransactions.reduce((sum, t) => sum + calculateHealthPoints(t.items), 0);
+    const totalPoints = dayTransactions.reduce(
+      (sum, t) => sum + calculateHealthPoints(t.items),
+      0
+    );
     const count = dayTransactions.length;
 
     return { count, totalPoints };
@@ -107,9 +124,14 @@ const CalendarView = ({
 
   // 선택된 날짜의 거래 정보
   const getSelectedDateTransactions = () => {
-    return transactions.filter(transaction => {
+    return transactions.filter((transaction) => {
       const transactionDate = new Date(transaction.transactionDate);
-      const transactionDateStr = `${transactionDate.getFullYear()}-${String(transactionDate.getMonth() + 1).padStart(2, "0")}-${String(transactionDate.getDate()).padStart(2, "0")}`;
+      const transactionDateStr = `${transactionDate.getFullYear()}-${String(
+        transactionDate.getMonth() + 1
+      ).padStart(2, "0")}-${String(transactionDate.getDate()).padStart(
+        2,
+        "0"
+      )}`;
       return transactionDateStr === selectedDateStr;
     });
   };
@@ -120,27 +142,27 @@ const CalendarView = ({
     <div className="px-4 py-2">
       {/* 년/월 선택 */}
       <div className="flex items-center justify-between mb-4">
-        <button 
+        <button
           onClick={() => handleMonthChange(-1)}
-          className="p-2 hover:bg-gray-100 rounded-lg"
+          className="p-2 rounded-lg hover:bg-gray-100"
         >
           ◀
         </button>
-        <span className="font-bold text-lg">
+        <span className="text-lg font-bold">
           {currentYear}년 {currentMonth + 1}월
         </span>
-        <button 
+        <button
           onClick={() => handleMonthChange(1)}
-          className="p-2 hover:bg-gray-100 rounded-lg"
+          className="p-2 rounded-lg hover:bg-gray-100"
         >
           ▶
         </button>
       </div>
 
       {/* 요일 헤더 */}
-      <div className="grid grid-cols-7 text-sm text-center gap-y-2 mb-2">
+      <div className="grid grid-cols-7 mb-2 text-sm text-center gap-y-2">
         {["일", "월", "화", "수", "목", "금", "토"].map((d, i) => (
-          <div key={i} className="font-medium text-gray-500 py-2">
+          <div key={i} className="py-2 font-medium text-gray-500">
             {d}
           </div>
         ))}
@@ -150,11 +172,11 @@ const CalendarView = ({
           const dateInfo = getDateInfo(day);
           const isSelected = day === selectedDay;
           const hasTransaction = hasTransactionOnDate(day);
-          
+
           return (
             <div
               key={i}
-              className="relative h-16 flex flex-col items-center"
+              className="relative flex flex-col items-center h-16"
               onClick={() => day && setSelectedDay(day)}
             >
               <div
@@ -168,11 +190,11 @@ const CalendarView = ({
               >
                 {day}
               </div>
-              
+
               {/* 거래 정보 표시 - 포인트 중심 */}
               {dateInfo && (
                 <div className="text-[10px] text-center mt-1">
-                  <div className="text-green-600 font-bold">
+                  <div className="font-bold text-green-600">
                     +{dateInfo.totalPoints}
                   </div>
                   <div className="text-gray-400 text-[8px]">
@@ -189,7 +211,7 @@ const CalendarView = ({
       <div className="mt-4 text-center">
         <button
           onClick={goToToday}
-          className="px-4 py-2 text-sm font-medium text-blue-600 border border-blue-500 rounded-full hover:bg-blue-50 transition-colors"
+          className="px-4 py-2 text-sm font-medium text-blue-600 transition-colors border border-blue-500 rounded-full hover:bg-blue-50"
         >
           오늘
         </button>
@@ -198,25 +220,33 @@ const CalendarView = ({
       {/* 선택된 날짜 요약 정보 - 포인트 중심 */}
       {selectedDateTransactions.length > 0 && (
         <div className="mt-6">
-          <h4 className="font-semibold text-gray-800 mb-3">
+          <h4 className="mb-3 font-semibold text-gray-800">
             {currentMonth + 1}월 {selectedDay}일 구매 요약
           </h4>
           <div className="space-y-2">
             {selectedDateTransactions.map((transaction, idx) => (
-              <div key={idx} className="p-3 text-sm bg-gradient-to-r from-green-50 to-blue-50 rounded-xl border border-green-100">
-                <div className="flex justify-between items-center">
+              <div
+                key={idx}
+                className="p-3 text-sm border border-green-100 bg-gradient-to-r from-green-50 to-blue-50 rounded-xl"
+              >
+                <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-semibold text-gray-800">{transaction.storeName}</p>
-                    <p className="text-xs text-gray-600 mt-1">
-                      {transaction.items.length}개 상품 • {" "}
-                      {new Date(transaction.transactionDate).toLocaleTimeString('ko-KR', {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
+                    <p className="font-semibold text-gray-800">
+                      {transaction.storeName}
+                    </p>
+                    <p className="mt-1 text-xs text-gray-600">
+                      {transaction.items.length}개 상품 •{" "}
+                      {new Date(transaction.transactionDate).toLocaleTimeString(
+                        "ko-KR",
+                        {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        }
+                      )}
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-bold text-green-600 text-lg">
+                    <p className="text-lg font-bold text-green-600">
                       +{calculateHealthPoints(transaction.items)}점
                     </p>
                     <p className="text-xs text-gray-400">
@@ -226,15 +256,22 @@ const CalendarView = ({
                 </div>
               </div>
             ))}
-            
+
             {/* 일일 총계 - 포인트 중심 */}
             {selectedDateTransactions.length > 1 && (
-              <div className="p-3 bg-green-100 rounded-xl border-t-2 border-green-500">
-                <div className="flex justify-between items-center">
-                  <span className="font-semibold text-gray-800">일일 누적 포인트</span>
+              <div className="p-3 bg-green-100 border-t-2 border-green-500 rounded-xl">
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold text-gray-800">
+                    일일 누적 포인트
+                  </span>
                   <div className="text-right">
-                    <p className="font-bold text-green-600 text-xl">
-                      +{selectedDateTransactions.reduce((sum, t) => sum + calculateHealthPoints(t.items), 0)}점
+                    <p className="text-xl font-bold text-green-600">
+                      +
+                      {selectedDateTransactions.reduce(
+                        (sum, t) => sum + calculateHealthPoints(t.items),
+                        0
+                      )}
+                      점
                     </p>
                     <p className="text-xs text-gray-500">
                       {selectedDateTransactions.length}건의 구매
@@ -249,8 +286,8 @@ const CalendarView = ({
 
       {/* 선택된 날짜에 데이터가 없을 때 */}
       {selectedDateTransactions.length === 0 && (
-        <div className="mt-6 text-center py-4">
-          <p className="text-gray-500 text-sm">
+        <div className="py-4 mt-6 text-center">
+          <p className="text-sm text-gray-500">
             {currentMonth + 1}월 {selectedDay}일에는 구매 기록이 없습니다.
           </p>
         </div>

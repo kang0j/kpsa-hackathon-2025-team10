@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ExternalLink, AlertCircle, RefreshCw } from "lucide-react";
+import { AlertCircle, RefreshCw } from "lucide-react";
 import BottomTab from "./BottomTab";
 import CareScreenPremium from "./CareScreenPremium";
 import { supplementService, transactionService } from "../../api/services";
@@ -12,7 +12,8 @@ export default function CareScreen({
 }) {
   const [showPremium, setShowPremium] = useState(false);
   const [isPremiumUser, setIsPremiumUser] = useState(false);
-  const [supplementData, setSupplementData] = useState<SupplementRecommendation | null>(null);
+  const [supplementData, setSupplementData] =
+    useState<SupplementRecommendation | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [healthAnalysis, setHealthAnalysis] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -25,12 +26,12 @@ export default function CareScreen({
     let totalAmount = 0;
     let goodAmount = 0;
     let badAmount = 0;
-    
-    transactions.forEach(transaction => {
-      transaction.items.forEach(item => {
+
+    transactions.forEach((transaction) => {
+      transaction.items.forEach((item) => {
         const itemTotal = item.price * item.quantity;
         totalAmount += itemTotal;
-        
+
         if (item.healthyScore > 0) {
           totalGoodScore += item.healthyScore * item.quantity;
           goodAmount += itemTotal;
@@ -41,51 +42,51 @@ export default function CareScreen({
         // 0점은 무시
       });
     });
-    
+
     return {
       totalGoodScore,
       totalBadScore,
       totalAmount,
       goodAmount,
       badAmount,
-      neutralAmount: totalAmount - goodAmount - badAmount
+      neutralAmount: totalAmount - goodAmount - badAmount,
     };
   };
-  
+
   // 퍼센트 계산
   const calculatePercentages = (analysis: any) => {
     const total = analysis.totalGoodScore + analysis.totalBadScore;
     if (total === 0) return { goodPercent: 50, badPercent: 50 };
-    
+
     return {
       goodPercent: Math.round((analysis.totalGoodScore / total) * 100),
-      badPercent: Math.round((analysis.totalBadScore / total) * 100)
+      badPercent: Math.round((analysis.totalBadScore / total) * 100),
     };
   };
 
   // 컴포넌트 마운트 시 localStorage에서 프리미엄 상태 확인
   useEffect(() => {
-    const premiumStatus = localStorage.getItem('isPremiumUser');
-    if (premiumStatus === 'true') {
+    const premiumStatus = localStorage.getItem("isPremiumUser");
+    if (premiumStatus === "true") {
       setIsPremiumUser(true);
     }
-    
+
     // 홈에서 프리미엄 플랜 버튼을 눌렀는지 확인
-    const showPremiumPlan = localStorage.getItem('showPremiumPlan');
-    if (showPremiumPlan === 'true') {
+    const showPremiumPlan = localStorage.getItem("showPremiumPlan");
+    if (showPremiumPlan === "true") {
       setShowPremium(true);
-      localStorage.removeItem('showPremiumPlan'); // 한번 사용 후 제거
+      localStorage.removeItem("showPremiumPlan"); // 한번 사용 후 제거
     }
-    
+
     // 영양제 추천 데이터와 거래 데이터 가져오기
     fetchData();
   }, []);
 
   // 모든 데이터 가져오기
   const fetchData = async () => {
-    const userId = localStorage.getItem('userId');
+    const userId = localStorage.getItem("userId");
     if (!userId) {
-      setError('로그인이 필요합니다.');
+      setError("로그인이 필요합니다.");
       setLoading(false);
       return;
     }
@@ -93,23 +94,22 @@ export default function CareScreen({
     try {
       setLoading(true);
       setError(null);
-      
+
       // 병렬로 데이터 가져오기
       const [supplementResult, transactionResult] = await Promise.all([
         supplementService.getSupplementRecommendation(userId),
-        transactionService.getUserTransactions(userId)
+        transactionService.getUserTransactions(userId),
       ]);
-      
+
       setSupplementData(supplementResult);
       setTransactions(transactionResult);
-      
+
       // 건강 점수 분석
       const analysis = analyzeHealthScores(transactionResult);
       setHealthAnalysis(analysis);
-      
     } catch (err: any) {
-      console.error('데이터 조회 실패:', err);
-      setError('데이터를 불러오는데 실패했습니다.');
+      console.error("데이터 조회 실패:", err);
+      setError("데이터를 불러오는데 실패했습니다.");
     } finally {
       setLoading(false);
     }
@@ -118,8 +118,8 @@ export default function CareScreen({
   // 프리미엄 구독 처리
   const handlePremiumUpgrade = () => {
     setIsPremiumUser(true);
-    localStorage.setItem('isPremiumUser', 'true');
-    localStorage.setItem('premiumStartDate', new Date().toISOString());
+    localStorage.setItem("isPremiumUser", "true");
+    localStorage.setItem("premiumStartDate", new Date().toISOString());
   };
 
   // 프리미엄 사용자라면 프리미엄 화면을 보여줌
@@ -133,15 +133,15 @@ export default function CareScreen({
       <div className="flex-1 px-6">
         {/* 제목 */}
         <div className="flex items-center justify-between pt-8 mb-8">
-          <h1 className="text-2xl font-bold text-center flex-1">
+          <h1 className="flex-1 text-2xl font-bold text-center">
             소비 패턴 분석
           </h1>
-          <button 
+          <button
             onClick={fetchData}
-            className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg"
+            className="p-2 text-blue-500 rounded-lg hover:bg-blue-50"
             disabled={loading}
           >
-            <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-5 h-5 ${loading ? "animate-spin" : ""}`} />
           </button>
         </div>
 
@@ -156,18 +156,19 @@ export default function CareScreen({
                   viewBox="0 0 200 200"
                 >
                   {(() => {
-                    const { goodPercent, badPercent } = calculatePercentages(healthAnalysis);
+                    const { goodPercent, badPercent } =
+                      calculatePercentages(healthAnalysis);
                     const radius = 80;
                     const circumference = 2 * Math.PI * radius;
-                    
+
                     // 좋은 음식 (초록색)
                     const goodLength = (goodPercent / 100) * circumference;
                     const goodOffset = 0;
-                    
+
                     // 나쁜 음식 (빨간색)
                     const badLength = (badPercent / 100) * circumference;
                     const badOffset = -goodLength;
-                    
+
                     return (
                       <>
                         {/* 좋은 음식 섹션 */}
@@ -209,18 +210,18 @@ export default function CareScreen({
 
                 {/* 범례 라벨들 - 실제 데이터 */}
                 <div className="absolute px-2 py-1 text-xs text-gray-600 bg-white rounded shadow top-8 right-4">
-                  건강한 음식 ({calculatePercentages(healthAnalysis).goodPercent}%)
+                  건강한 음식 (
+                  {calculatePercentages(healthAnalysis).goodPercent}%)
                 </div>
                 <div className="absolute px-2 py-1 text-xs text-gray-600 bg-white rounded shadow left-4 top-1/3">
-                  건강하지 않은 음식 ({calculatePercentages(healthAnalysis).badPercent}%)
+                  건강하지 않은 음식 (
+                  {calculatePercentages(healthAnalysis).badPercent}%)
                 </div>
-                
-                {/* 상세 정보 */}
-                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-center">
-                  <div className="bg-white rounded-lg shadow px-3 py-1">
-                    <div className="text-xs text-gray-600">
 
-                    </div>
+                {/* 상세 정보 */}
+                <div className="absolute text-center transform -translate-x-1/2 bottom-4 left-1/2">
+                  <div className="px-3 py-1 bg-white rounded-lg shadow">
+                    <div className="text-xs text-gray-600"></div>
                   </div>
                 </div>
               </>
@@ -228,7 +229,7 @@ export default function CareScreen({
               // 로딩 중이거나 데이터가 없을 때
               <div className="flex items-center justify-center w-full h-full">
                 <div className="text-center">
-                  <div className="w-8 h-8 border-2 border-blue-200 border-t-blue-500 rounded-full animate-spin mx-auto mb-2"></div>
+                  <div className="w-8 h-8 mx-auto mb-2 border-2 border-blue-200 rounded-full border-t-blue-500 animate-spin"></div>
                   <p className="text-sm text-gray-500">분석 중...</p>
                 </div>
               </div>
@@ -239,26 +240,30 @@ export default function CareScreen({
         {/* AI 분석 결과 - 실제 데이터 기반 */}
         <div className="mb-8">
           {supplementData && (
-            <div className="p-4 bg-blue-50 rounded-xl border border-blue-200 mb-4">
-              <h3 className="font-semibold text-blue-800 mb-2">🤖 AI 건강 분석</h3>
-              <p className="text-sm text-blue-700 leading-relaxed">
+            <div className="p-4 mb-4 border border-blue-200 bg-blue-50 rounded-xl">
+              <h3 className="mb-2 font-semibold text-blue-800">
+                🤖 AI 건강 분석
+              </h3>
+              <p className="text-sm leading-relaxed text-blue-700">
                 {supplementData["ai 추천 사항"]}
               </p>
             </div>
           )}
-          
+
           {healthAnalysis && (
-            <div className="p-4 bg-gradient-to-r from-green-50 to-red-50 rounded-xl border mb-4">
-              <h3 className="font-semibold text-gray-800 mb-2">📊 소비 패턴 분석</h3>
+            <div className="p-4 mb-4 border bg-gradient-to-r from-green-50 to-red-50 rounded-xl">
+              <h3 className="mb-2 font-semibold text-gray-800">
+                📊 소비 패턴 분석
+              </h3>
               <div className="grid grid-cols-2 gap-4 text-sm">
-                <div className="text-center p-3 bg-green-100 rounded-lg">
-                  <div className="text-green-700 font-bold text-lg">
+                <div className="p-3 text-center bg-green-100 rounded-lg">
+                  <div className="text-lg font-bold text-green-700">
                     {healthAnalysis.totalGoodScore.toLocaleString()}점
                   </div>
                   <div className="text-green-600">건강한 선택</div>
                 </div>
-                <div className="text-center p-3 bg-red-100 rounded-lg">
-                  <div className="text-red-700 font-bold text-lg">
+                <div className="p-3 text-center bg-red-100 rounded-lg">
+                  <div className="text-lg font-bold text-red-700">
                     {healthAnalysis.totalBadScore.toLocaleString()}점
                   </div>
                   <div className="text-red-600">건강하지 않은 선택</div>
@@ -266,14 +271,14 @@ export default function CareScreen({
               </div>
               <div className="mt-3 text-center">
                 <p className="text-sm text-gray-600">
-                  {healthAnalysis.totalGoodScore > healthAnalysis.totalBadScore 
-                    ? "👍 건강한 소비 패턴을 보이고 있어요!" 
+                  {healthAnalysis.totalGoodScore > healthAnalysis.totalBadScore
+                    ? "👍 건강한 소비 패턴을 보이고 있어요!"
                     : "💪 더 건강한 선택을 늘려보세요!"}
                 </p>
               </div>
             </div>
           )}
-          
+
           <h2 className="text-2xl font-bold leading-tight text-black">
             소비를 분석해보니,
             <br />
@@ -283,19 +288,21 @@ export default function CareScreen({
 
         {/* 실제 영양제 추천 영역 */}
         <div className="mb-8">
-          <h3 className="text-lg font-bold mb-4 text-gray-800">🏥 AI 맞춤 영양제 추천</h3>
-          
+          <h3 className="mb-4 text-lg font-bold text-gray-800">
+            🏥 AI 맞춤 영양제 추천
+          </h3>
+
           {loading && (
-            <div className="text-center py-8">
-              <div className="w-8 h-8 border-2 border-blue-200 border-t-blue-500 rounded-full animate-spin mx-auto mb-3"></div>
+            <div className="py-8 text-center">
+              <div className="w-8 h-8 mx-auto mb-3 border-2 border-blue-200 rounded-full border-t-blue-500 animate-spin"></div>
               <p className="text-gray-600">AI가 영양제를 추천하는 중...</p>
             </div>
           )}
 
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4">
+            <div className="p-4 mb-4 border border-red-200 bg-red-50 rounded-xl">
               <div className="flex items-center">
-                <AlertCircle className="w-5 h-5 text-red-500 mr-2" />
+                <AlertCircle className="w-5 h-5 mr-2 text-red-500" />
                 <span className="text-red-700">{error}</span>
               </div>
             </div>
@@ -304,28 +311,35 @@ export default function CareScreen({
           {supplementData && !loading && !error && (
             <div className="space-y-4">
               {/* 영양제 추천 목록 */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 {supplementData["맞춤 영양제 추천"].map((supplement, index) => (
-                  <div key={index} className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-200 text-center">
-                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <div
+                    key={index}
+                    className="p-4 text-center transition-all duration-200 bg-white border border-gray-200 shadow-sm rounded-xl hover:shadow-md"
+                  >
+                    <div className="flex items-center justify-center w-12 h-12 mx-auto mb-3 bg-blue-100 rounded-full">
                       <span className="text-2xl">
-                        {supplement === "오메가3" ? "🐟" : 
-                         supplement === "비타민D" ? "☀️" : 
-                         supplement === "마그네슘" ? "🧪" : "💊"}
+                        {supplement === "오메가3"
+                          ? "🐟"
+                          : supplement === "비타민D"
+                          ? "☀️"
+                          : supplement === "마그네슘"
+                          ? "🧪"
+                          : "💊"}
                       </span>
                     </div>
-                    <h4 className="font-semibold text-lg text-gray-800 mb-2">
+                    <h4 className="mb-2 text-lg font-semibold text-gray-800">
                       {supplement}
                     </h4>
-                    <div className="flex items-center justify-center space-x-2 mb-3">
-                      <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full font-medium">
+                    <div className="flex items-center justify-center mb-3 space-x-2">
+                      <span className="px-2 py-1 text-xs font-medium text-green-700 bg-green-100 rounded-full">
                         AI 추천
                       </span>
-                      <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-medium">
+                      <span className="px-2 py-1 text-xs font-medium text-blue-700 bg-blue-100 rounded-full">
                         맞춤형
                       </span>
                     </div>
-                    <button className="w-full px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors">
+                    <button className="w-full px-4 py-2 text-sm font-medium text-white transition-colors bg-blue-500 rounded-lg hover:bg-blue-600">
                       상품 보기
                     </button>
                   </div>
@@ -333,14 +347,14 @@ export default function CareScreen({
               </div>
 
               {/* AI 상세 추천 사항 */}
-              <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-4 border border-blue-200">
-                <h4 className="font-semibold text-gray-800 mb-3 flex items-center">
-                  <span className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center mr-2">
+              <div className="p-4 border border-blue-200 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl">
+                <h4 className="flex items-center mb-3 font-semibold text-gray-800">
+                  <span className="flex items-center justify-center w-6 h-6 mr-2 bg-purple-100 rounded-full">
                     🤖
                   </span>
                   AI 전문가 조언
                 </h4>
-                <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
+                <p className="text-sm leading-relaxed text-gray-700 whitespace-pre-line">
                   {supplementData["ai 추천 사항"]}
                 </p>
               </div>
@@ -366,12 +380,12 @@ export default function CareScreen({
 
         {/* 약사 상담 카드 */}
         <div className="p-1 mb-4 bg-sky-50 rounded-xl">
-        <img
-          src="/images/home_pharm_cunsulting.gif"
-          alt="약사 건강 컨설팅"
-          className="w-full h-auto rounded-lg"
-        />
-      </div>
+          <img
+            src="/images/home_pharm_cunsulting.gif"
+            alt="약사 건강 컨설팅"
+            className="w-full h-auto rounded-lg"
+          />
+        </div>
 
         {/* 더보기 버튼 */}
         {!showPremium && (
@@ -452,7 +466,7 @@ export default function CareScreen({
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center">
                     <img
-                      className="w-12 h-12 mr-3 rounded-full object-cover"
+                      className="object-cover w-12 h-12 mr-3 rounded-full"
                       src="https://cdn.pixabay.com/photo/2024/05/30/13/39/ai-generated-8798551_1280.jpg"
                       alt="약사"
                     />
@@ -482,9 +496,10 @@ export default function CareScreen({
                       <span className="text-sm font-semibold text-red-700">
                         건강기능식품 20% 할인
                       </span>
-                      <p className="text-xs text-red-600">모든 제품 사용 가능*</p>
+                      <p className="text-xs text-red-600">
+                        모든 제품 사용 가능*
+                      </p>
                     </div>
-                    
                   </div>
                 </div>
                 <div className="p-3 border-l-4 border-blue-400 rounded-lg bg-gradient-to-r from-blue-100 to-cyan-100">
@@ -493,9 +508,10 @@ export default function CareScreen({
                       <span className="text-sm font-semibold text-blue-700">
                         건강식 배달 15% 할인
                       </span>
-                      <p className="text-xs text-blue-600">특정 쇼핑몰 사용 가능*</p>
+                      <p className="text-xs text-blue-600">
+                        특정 쇼핑몰 사용 가능*
+                      </p>
                     </div>
-
                   </div>
                 </div>
               </div>
