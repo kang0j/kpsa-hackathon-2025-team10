@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { Receipt, History, Heart, Crown, Star, Zap, Play, CheckCircle, TrendingUp, Bookmark, DollarSign } from "lucide-react";
+import React, { useState, useRef } from 'react';
+import { Receipt, History, Heart, Crown, Star, Zap, Play, CheckCircle, TrendingUp, Bookmark, Camera, Upload, X, AlertCircle } from "lucide-react";
 import BottomTab from "./BottomTab";
+import { receiptService } from "../../api/services";
 
 export default function HomeScreen({
   onTabChange,
@@ -10,6 +11,17 @@ export default function HomeScreen({
   const [showPremiumAd, setShowPremiumAd] = useState(true);
   const [completedTip, setCompletedTip] = useState(false);
   const [bookmarkedVideos, setBookmarkedVideos] = useState<string[]>([]);
+  
+  // 영수증 업로드 관련 상태
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadResult, setUploadResult] = useState<any>(null);
+  const [showResultModal, setShowResultModal] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // 더미 데이터
   const todayFoods = [
@@ -108,6 +120,76 @@ export default function HomeScreen({
     }
   ];
 
+  // 영수증 업로드 관련 함수들
+  const handleReceiptUpload = () => {
+    setShowUploadModal(true);
+    setSelectedFile(null);
+    setPreviewUrl(null);
+    setUploadError(null);
+  };
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (file.type.startsWith('image/')) {
+        setSelectedFile(file);
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setPreviewUrl(e.target?.result as string);
+        };
+        reader.readAsDataURL(file);
+        setUploadError(null);
+      } else {
+        setUploadError('이미지 파일만 업로드 가능합니다.');
+      }
+    }
+  };
+
+  const handleUploadSubmit = async () => {
+    if (!selectedFile) {
+      setUploadError('영수증 이미지를 선택해주세요.');
+      return;
+    }
+
+    const userId = localStorage.getItem('userId');
+    if (!userId) {
+      setUploadError('로그인이 필요합니다.');
+      return;
+    }
+
+    try {
+      setIsUploading(true);
+      setUploadError(null);
+      
+      const result = await receiptService.uploadReceipt(userId, selectedFile);
+      
+      setUploadResult(result);
+      setShowUploadModal(false);
+      setShowResultModal(true);
+      
+    } catch (error: any) {
+      console.error('영수증 업로드 실패:', error);
+      if (error.response?.status === 400) {
+        setUploadError(error.response.data.error || '잘못된 요청입니다.');
+      } else if (error.response?.status === 500) {
+        setUploadError('서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+      } else {
+        setUploadError('영수증 업로드에 실패했습니다.');
+      }
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const closeModal = () => {
+    setShowUploadModal(false);
+    setShowResultModal(false);
+    setSelectedFile(null);
+    setPreviewUrl(null);
+    setUploadError(null);
+    setUploadResult(null);
+  };
+
   const toggleBookmark = (videoId: string) => {
     setBookmarkedVideos(prev => 
       prev.includes(videoId) 
@@ -127,20 +209,21 @@ export default function HomeScreen({
     return `${month}월 ${date}일 ${dayName}`;
   };
 
+  // 사용자 이름 가져오기
+  const getUserName = () => {
+    return localStorage.getItem('userName') || '사용자';
+  };
+
   return (
     <div className="min-h-screen pb-20">
       <div className="p-4 text-center pt-8">
-        <p className="text-sm">홍길동님, 안녕하세요</p>
+        <p className="text-sm">{getUserName()}님, 안녕하세요</p>
         <p className="text-xs text-gray-500">{getCurrentDateString()}</p>
       </div>
 
       <div className="p-4 mx-4 mb-4 bg-gradient-to-r from-sky-200 to-blue-200 rounded-2xl">
         <p className="text-sm">적립 포인트</p>
-        <div className="flex items-center">
-          <p className="text-3xl font-extrabold">530</p>
-          <DollarSign className="w-6 h-6 ml-1 text-green-600" />
-        </div>
-        <p className="text-3xl font-extrabold">530(p.)</p>
+        <p className="text-3xl font-extrabold">530P</p>
       </div>
 
       <div className="flex justify-between px-6 mb-4 text-xs">
@@ -228,25 +311,28 @@ export default function HomeScreen({
         </div>
       )}
 
-      <div className="flex items-center justify-between p-4 mx-4 mb-4 bg-sky-50 rounded-xl">
-        <div>
-          <p className="text-sm font-bold">💊 약사 건강 컨설팅</p>
-          <p className="text-xs text-gray-600">&lt;약사 소개 한 줄&gt;</p>
-        </div>
-        <div className="text-xs text-gray-500">근처 500m</div>
+      <div className="p-1 mx-4 mb-4 bg-sky-50 rounded-xl">
+        <img 
+          src="/images/home_pharm_cunsulting.gif" 
+          alt="약사 건강 컨설팅" 
+          className="w-full h-auto rounded-lg"
+        />
       </div>
 
       {/* Button Grid */}
-      <div className="grid grid-cols-2 gap-2 px-4 mb-6">
+      <div className="grid grid-cols-2 gap-4 px-4 mb-6">
         {/* 영수증 인증하기 - Large Left Button */}
         <div className="col-span-1 row-span-2 relative">
-          <div className="w-full h-52 bg-gradient-to-l from-blue-400 to-blue-600 rounded-xl cursor-pointer overflow-hidden relative">
+          <div 
+            className="w-full h-48 bg-gradient-to-l from-blue-400 to-blue-600 rounded-xl cursor-pointer overflow-hidden relative hover:from-blue-500 hover:to-blue-700 transition-all duration-200"
+            onClick={handleReceiptUpload}
+          >
             {/* Background Icon */}
             <div className="absolute top-4 right-4 opacity-20">
-              <Receipt className="w-20 h-20 text-white/60" />
+              <Receipt className="w-16 h-16 text-white/60" />
             </div>
             {/* Text */}
-            <div className="absolute bottom-8 left-4 text-white text-xl font-bold">
+            <div className="absolute bottom-6 left-4 text-white text-lg font-bold">
               영수증<br/>인증하기
             </div>
           </div>
@@ -254,28 +340,28 @@ export default function HomeScreen({
 
         {/* 소비내역 - Top Right Button */}
         <div 
-          className="bg-green-400 rounded-xl p-4 flex items-center justify-center text-white font-semibold min-h-[100px] cursor-pointer relative overflow-hidden"
+          className="bg-green-400 rounded-xl p-4 flex items-center justify-center text-white font-semibold min-h-[90px] cursor-pointer relative overflow-hidden"
           onClick={() => onTabChange("history")}
         >
           {/* Background Icon */}
           <div className="absolute top-2 right-2 opacity-30">
-            <History className="w-10 h-10 text-white/60" />
+            <History className="w-8 h-8 text-white/60" />
           </div>
           {/* Text */}
-          <span className="absolute bottom-4 left-4 text-white text-lg font-bold">소비내역</span>
+          <span className="absolute bottom-3 left-4 text-white text-base font-bold">소비내역</span>
         </div>
 
         {/* 케어 - Bottom Right Button */}
         <div 
-          className="bg-sky-300 rounded-xl p-4 flex items-center justify-center text-white font-semibold min-h-[100px] cursor-pointer relative overflow-hidden"
+          className="bg-sky-300 rounded-xl p-4 flex items-center justify-center text-white font-semibold min-h-[90px] cursor-pointer relative overflow-hidden"
           onClick={() => onTabChange("care")}
         >
           {/* Background Icon */}
           <div className="absolute top-2 right-2 opacity-30">
-            <Heart className="w-10 h-10 text-white/60" />
+            <Heart className="w-8 h-8 text-white/60" />
           </div>
           {/* Text */}
-          <span className="absolute bottom-4 left-4 text-white text-lg font-bold">케어</span>
+          <span className="absolute bottom-3 left-4 text-white text-base font-bold">케어</span>
         </div>
       </div>
 
@@ -307,11 +393,11 @@ export default function HomeScreen({
 
       {/* 오늘의 건강 팁 */}
       <div className="mb-6 mx-4">
-        <div className="mb-3">
-          <h2 className="text-lg font-bold text-black">💡 오늘의 건강 팁</h2>
-          <p className="text-sm text-gray-600">최신 건강 정보를 확인하세요</p>
-        </div>
         <div className="bg-white rounded-xl shadow-sm p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-bold text-black">💡 오늘의 건강 팁</h2>
+            <span className="text-2xl">{healthTip.icon}</span>
+          </div>
           <h3 className="font-semibold mb-2">{healthTip.title}</h3>
           <p className="text-sm text-gray-600 mb-3">{healthTip.description}</p>
           <button 
@@ -356,6 +442,203 @@ export default function HomeScreen({
           ))}
         </div>
       </div>
+
+      {/* 영수증 업로드 모달 */}
+      {showUploadModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold">영수증 업로드</h2>
+              <button onClick={closeModal} className="p-2">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {!previewUrl ? (
+              <div className="space-y-4">
+                <div 
+                  className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer hover:border-blue-400 transition-colors"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-600 mb-2">영수증 이미지를 업로드하세요</p>
+                  <p className="text-sm text-gray-400">JPG, PNG 파일 지원</p>
+                </div>
+
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex-1 bg-blue-500 text-white py-3 rounded-xl flex items-center justify-center space-x-2"
+                  >
+                    <Camera className="w-5 h-5" />
+                    <span>사진 촬영</span>
+                  </button>
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex-1 bg-gray-500 text-white py-3 rounded-xl flex items-center justify-center space-x-2"
+                  >
+                    <Upload className="w-5 h-5" />
+                    <span>갤러리</span>
+                  </button>
+                </div>
+
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                />
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="border rounded-xl overflow-hidden">
+                  <img src={previewUrl} alt="영수증 미리보기" className="w-full h-48 object-cover" />
+                </div>
+                
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => {
+                      setSelectedFile(null);
+                      setPreviewUrl(null);
+                    }}
+                    className="flex-1 bg-gray-500 text-white py-3 rounded-xl"
+                  >
+                    다시 선택
+                  </button>
+                  <button
+                    onClick={handleUploadSubmit}
+                    disabled={isUploading}
+                    className="flex-1 bg-blue-500 text-white py-3 rounded-xl disabled:bg-gray-400"
+                  >
+                    {isUploading ? '업로드 중...' : '업로드'}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {uploadError && (
+              <div className="mt-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm flex items-center">
+                <AlertCircle className="w-4 h-4 mr-2 flex-shrink-0" />
+                {uploadError}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* 로딩 모달 */}
+      {isUploading && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-8 text-center">
+            <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-500 rounded-full animate-spin mx-auto mb-4"></div>
+            <h3 className="text-lg font-bold mb-2">AI가 영수증을 분석 중입니다</h3>
+            <p className="text-gray-600 text-sm">잠시만 기다려주세요...</p>
+          </div>
+        </div>
+      )}
+
+      {/* 결과 모달 */}
+      {showResultModal && uploadResult && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md max-h-[80vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-green-600">✅ 분석 완료!</h2>
+              <button onClick={closeModal} className="p-2">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* 상점 정보 */}
+              <div className="bg-gray-50 rounded-xl p-4">
+                <h3 className="font-bold mb-2">구매 정보</h3>
+                <p className="text-sm"><span className="font-semibold">상점:</span> {uploadResult.transaction.storeName}</p>
+                <p className="text-sm"><span className="font-semibold">총 금액:</span> {uploadResult.transaction.totalAmount.toLocaleString()}원</p>
+                <p className="text-sm"><span className="font-semibold">날짜:</span> {new Date(uploadResult.transaction.transactionDate).toLocaleDateString()}</p>
+              </div>
+
+              {/* 상품 목록 */}
+              <div>
+                <h3 className="font-bold mb-3">구매 상품 ({uploadResult.transaction.items.length}개)</h3>
+                <div className="space-y-3">
+                  {uploadResult.transaction.items.map((item: any) => (
+                    <div key={item.id} className="border rounded-xl p-3">
+                      <div className="flex justify-between items-start mb-2">
+                        <h4 className="font-semibold text-sm">{item.itemName}</h4>
+                        <div className="flex items-center space-x-1">
+                          <Star className="w-4 h-4 text-yellow-500" />
+                          <span className="text-sm font-bold">{item.healthyScore}점</span>
+                        </div>
+                      </div>
+                      <p className="text-xs text-gray-600 mb-2">{item.commentByAI}</p>
+                      <div className="flex justify-between items-center text-sm">
+                        <span>{item.quantity}개</span>
+                        <span className="font-semibold">{item.price.toLocaleString()}원</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* 건강 점수 요약 - 개선된 버전 */}
+              <div className="bg-green-50 rounded-xl p-4">
+                <h3 className="font-bold mb-3 text-green-700">건강 점수 요약</h3>
+                
+                {/* 평균 점수를 더 큰 형태로 표시 */}
+                <div className="text-center mb-3">
+                  <div className="text-3xl font-bold text-green-600 mb-1">
+                    {Math.round((uploadResult.transaction.items.reduce((acc: number, item: any) => acc + item.healthyScore, 0) / uploadResult.transaction.items.length) * 20)}점
+                  </div>
+                  <div className="text-sm text-gray-600">평균 건강 점수</div>
+                </div>
+
+                {/* 프로그레스 바를 더 컴팩트하게 */}
+                <div className="mb-3">
+                  <div className="flex justify-between text-xs text-gray-600 mb-1">
+                    <span>건강도</span>
+                    <span>{uploadResult.transaction.items.length}개 상품</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-gradient-to-r from-green-400 to-green-600 h-2 rounded-full transition-all duration-500"
+                      style={{ 
+                        width: `${(uploadResult.transaction.items.reduce((acc: number, item: any) => acc + item.healthyScore, 0) / (uploadResult.transaction.items.length * 5)) * 100}%` 
+                      }}
+                    ></div>
+                  </div>
+                </div>
+
+                {/* 간단한 통계 정보 */}
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="text-center">
+                    <div className="font-bold text-green-600">
+                      {uploadResult.transaction.items.filter((item: any) => item.healthyScore >= 4).length}개
+                    </div>
+                    <div className="text-gray-600">건강 상품</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="font-bold text-orange-600">
+                      {uploadResult.transaction.items.filter((item: any) => item.healthyScore < 3).length}개
+                    </div>
+                    <div className="text-gray-600">주의 상품</div>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                onClick={() => {
+                  closeModal();
+                  onTabChange("history");
+                }}
+                className="w-full bg-blue-500 text-white py-3 rounded-xl font-semibold"
+              >
+                소비내역에서 확인하기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <BottomTab selected="home" onTabChange={onTabChange} />
     </div>

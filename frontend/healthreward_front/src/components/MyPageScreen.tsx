@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import BottomTab from "./BottomTab";
 
 interface UserProfile {
@@ -29,13 +29,45 @@ export default function MyPageScreen({
   const [activeTab, setActiveTab] = useState<
     "profile" | "achievements" | "settings"
   >("profile");
+  const [isPremiumUser, setIsPremiumUser] = useState(false);
+  const [premiumStartDate, setPremiumStartDate] = useState<string | null>(null);
+  const [showPlanModal, setShowPlanModal] = useState(false);
 
-  // 더미 사용자 데이터
+  // 컴포넌트 마운트 시 localStorage에서 프리미엄 상태 확인
+  useEffect(() => {
+    const premiumStatus = localStorage.getItem('isPremiumUser');
+    const startDate = localStorage.getItem('premiumStartDate');
+    
+    if (premiumStatus === 'true') {
+      setIsPremiumUser(true);
+      setPremiumStartDate(startDate);
+    }
+  }, []);
+
+  // 프리미엄 플랜 해지 처리
+  const handleCancelPremium = () => {
+    setIsPremiumUser(false);
+    setPremiumStartDate(null);
+    localStorage.removeItem('isPremiumUser');
+    localStorage.removeItem('premiumStartDate');
+    setShowPlanModal(false);
+  };
+
+  // 다음 결제일 계산 (시작일로부터 1달 후)
+  const getNextPaymentDate = () => {
+    if (!premiumStartDate) return "";
+    const startDate = new Date(premiumStartDate);
+    const nextPayment = new Date(startDate);
+    nextPayment.setMonth(nextPayment.getMonth() + 1);
+    return nextPayment.toLocaleDateString("ko-KR");
+  };
+
+  // 더미 사용자 데이터 (프리미엄 상태에 따라 plan 값 변경)
   const userProfile: UserProfile = {
     name: "김건강",
     email: "healthy@email.com",
     avatar: "https://placehold.co/100x100",
-    plan: "premium",
+    plan: isPremiumUser ? "premium" : "free",
     joinDate: "2025-06-15",
     healthScore: 87,
     totalExpenses: 2450000,
@@ -112,6 +144,11 @@ export default function MyPageScreen({
               {userProfile.plan === "premium" && (
                 <span className="px-3 py-1 text-xs font-bold text-white rounded-full bg-gradient-to-r from-purple-600 to-blue-600">
                   👑 프리미엄
+                </span>
+              )}
+              {userProfile.plan === "free" && (
+                <span className="px-3 py-1 text-xs font-bold text-gray-600 bg-gray-200 rounded-full">
+                  무료 플랜
                 </span>
               )}
             </div>
@@ -386,20 +423,6 @@ export default function MyPageScreen({
                   </div>
                   <span className="text-gray-400">›</span>
                 </button>
-                <button className="flex items-center justify-between w-full py-3 border-b border-gray-100">
-                  <div className="flex items-center">
-                    <span className="mr-3 text-xl">🔔</span>
-                    <span>알림 설정</span>
-                  </div>
-                  <span className="text-gray-400">›</span>
-                </button>
-                <button className="flex items-center justify-between w-full py-3 border-b border-gray-100">
-                  <div className="flex items-center">
-                    <span className="mr-3 text-xl">🔒</span>
-                    <span>개인정보 보호</span>
-                  </div>
-                  <span className="text-gray-400">›</span>
-                </button>
               </div>
             </div>
 
@@ -407,67 +430,95 @@ export default function MyPageScreen({
             <div className="bg-white shadow-sm rounded-xl">
               <h3 className="p-6 pb-0 text-lg font-bold">구독 관리</h3>
               <div className="p-6 pt-4">
-                <div className="p-4 mb-4 rounded-lg bg-gradient-to-r from-purple-50 to-blue-50">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-bold text-purple-700">
-                      프리미엄 플랜
-                    </span>
-                    <span className="px-3 py-1 text-xs text-white bg-purple-600 rounded-full">
-                      활성
-                    </span>
+                {isPremiumUser ? (
+                  <div className="p-4 mb-4 rounded-lg bg-gradient-to-r from-purple-50 to-blue-50">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-bold text-purple-700">
+                        프리미엄 플랜
+                      </span>
+                      <span className="px-3 py-1 text-xs text-white bg-purple-600 rounded-full">
+                        활성
+                      </span>
+                    </div>
+                    <p className="mb-3 text-sm text-gray-600">
+                      다음 결제일: {getNextPaymentDate()}
+                    </p>
+                    <div className="flex space-x-3">
+                      <button 
+                        onClick={() => setShowPlanModal(true)}
+                        className="flex-1 py-2 text-sm font-semibold text-purple-600 bg-white border border-purple-200 rounded-lg"
+                      >
+                        플랜 해지
+                      </button>
+                    </div>
                   </div>
-                  <p className="mb-3 text-sm text-gray-600">
-                    다음 결제일: 2025년 8월 15일
-                  </p>
-                  <div className="flex space-x-3">
-                    <button className="flex-1 py-2 text-sm font-semibold text-purple-600 bg-white border border-purple-200 rounded-lg">
-                      플랜 변경
-                    </button>
-                    <button className="flex-1 py-2 text-sm font-semibold text-white bg-purple-600 rounded-lg">
-                      결제 관리
+                ) : (
+                  <div className="p-4 mb-4 bg-gray-50 rounded-lg">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-bold text-gray-700">무료 플랜</span>
+                      <span className="px-3 py-1 text-xs text-gray-600 bg-gray-200 rounded-full">
+                        현재 플랜
+                      </span>
+                    </div>
+                    <p className="mb-3 text-sm text-gray-600">
+                      프리미엄 플랜으로 업그레이드하여 더 많은 기능을 이용해보세요!
+                    </p>
+                    <button 
+                      onClick={() => onTabChange('care')}
+                      className="w-full py-2 text-sm font-semibold text-white rounded-lg bg-gradient-to-r from-purple-600 to-blue-600"
+                    >
+                      프리미엄 플랜 시작하기
                     </button>
                   </div>
-                </div>
+                )}
               </div>
             </div>
 
             {/* 앱 설정 */}
             <div className="bg-white shadow-sm rounded-xl">
-              <h3 className="p-6 pb-0 text-lg font-bold">앱 설정</h3>
-              <div className="p-6 pt-4 space-y-4">
-                <button className="flex items-center justify-between w-full py-3 border-b border-gray-100">
-                  <div className="flex items-center">
-                    <span className="mr-3 text-xl">❓</span>
-                    <span>도움말</span>
-                  </div>
-                  <span className="text-gray-400">›</span>
-                </button>
-                <button className="flex items-center justify-between w-full py-3 border-b border-gray-100">
-                  <div className="flex items-center">
-                    <span className="mr-3 text-xl">📧</span>
-                    <span>문의하기</span>
-                  </div>
-                  <span className="text-gray-400">›</span>
-                </button>
-                <button className="flex items-center justify-between w-full py-3 border-b border-gray-100">
-                  <div className="flex items-center">
-                    <span className="mr-3 text-xl">⭐</span>
-                    <span>앱 평가하기</span>
-                  </div>
-                  <span className="text-gray-400">›</span>
-                </button>
+              <div className="p-6 pt-4 space-y-2">
                 <button className="flex items-center justify-between w-full py-3 text-red-600">
                   <div className="flex items-center">
                     <span className="mr-3 text-xl">🚪</span>
                     <span>로그아웃</span>
                   </div>
-                  <span className="text-gray-400">›</span>
                 </button>
               </div>
             </div>
           </div>
         )}
       </div>
+
+      {/* 플랜 관리 모달 */}
+      {showPlanModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="w-full max-w-sm p-6 mx-4 bg-white rounded-xl">
+            <h3 className="mb-4 text-lg font-bold text-center">플랜 관리</h3>
+            <div className="mb-6 text-center">
+              <p className="mb-2 text-sm text-gray-600">
+                현재 프리미엄 플랜을 이용 중입니다.
+              </p>
+              <p className="text-xs text-gray-500">
+                해지 시 다음 결제일까지 이용 가능합니다.
+              </p>
+            </div>
+            <div className="flex space-x-3">
+              <button
+                onClick={() => setShowPlanModal(false)}
+                className="flex-1 py-3 text-sm font-semibold text-gray-600 bg-gray-100 rounded-lg"
+              >
+                취소
+              </button>
+              <button
+                onClick={handleCancelPremium}
+                className="flex-1 py-3 text-sm font-semibold text-white bg-red-500 rounded-lg"
+              >
+                플랜 해지
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 하단 탭 */}
       <BottomTab selected="my" onTabChange={onTabChange} />

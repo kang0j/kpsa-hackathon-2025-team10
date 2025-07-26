@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import BottomTab from "./BottomTab";
 import CareScreenPremium from "./CareScreenPremium";
 
@@ -10,9 +10,19 @@ export default function CareScreen({
   const [showPremium, setShowPremium] = useState(false);
   const [isPremiumUser, setIsPremiumUser] = useState(false);
 
+  // 컴포넌트 마운트 시 localStorage에서 프리미엄 상태 확인
+  useEffect(() => {
+    const premiumStatus = localStorage.getItem('isPremiumUser');
+    if (premiumStatus === 'true') {
+      setIsPremiumUser(true);
+    }
+  }, []);
+
   // 프리미엄 구독 처리
   const handlePremiumUpgrade = () => {
     setIsPremiumUser(true);
+    localStorage.setItem('isPremiumUser', 'true');
+    localStorage.setItem('premiumStartDate', new Date().toISOString());
   };
 
   // 프리미엄 사용자라면 프리미엄 화면을 보여줌
