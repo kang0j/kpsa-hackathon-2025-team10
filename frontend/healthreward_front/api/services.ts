@@ -62,7 +62,7 @@ export interface ReceiptUploadResponse {
 export const authService = {
   // 회원가입
   signup: async (data: SignupData): Promise<User> => {
-    const response = await apiClient.post('/api/auth/signup', data);
+    const response = await apiClient.post('/users', data);
     return response.data;
   },
 
@@ -116,7 +116,7 @@ export const receiptService = {
     const formData = new FormData();
     formData.append('receiptImage', imageFile);
     
-    const response = await apiClient.post(`/api/receipts/upload/${userId}`, formData, {
+    const response = await apiClient.post(`/receipts/upload/${userId}`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
