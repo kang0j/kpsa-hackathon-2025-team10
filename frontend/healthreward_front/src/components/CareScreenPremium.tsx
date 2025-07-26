@@ -527,7 +527,7 @@ export default function CareScreenPremium({
                     onClick={() => startVideoCall(pharmacist)}
                     className="w-full py-2 font-semibold text-white bg-green-500 rounded-lg"
                   >
-                    📞 화상 상담 시작하기
+                    📞 전화 상담 시작하기
                   </button>
                 </div>
               ))}

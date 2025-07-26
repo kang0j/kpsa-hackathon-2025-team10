@@ -14,6 +14,10 @@ import {
   X,
   AlertCircle,
   RefreshCw,
+  Trophy,
+  Lightbulb,
+  Droplets,
+  Newspaper,
 } from "lucide-react";
 import BottomTab from "./BottomTab";
 import { receiptService, userService } from "../../api/services";
@@ -251,19 +255,19 @@ export default function HomeScreen({
 
             <div className="grid grid-cols-2 gap-3 mb-3 text-xs">
               <div className="flex items-center">
-                <span className="mr-1">🥗</span>
+                <Heart className="w-4 h-4 mr-1 text-green-400" />
                 <span>맞춤 음식 추천</span>
               </div>
               <div className="flex items-center">
-                <span className="mr-1">👩‍⚕️</span>
-                <span>약사 화상 상담</span>
+                <Crown className="w-4 h-4 mr-1 text-yellow-400" />
+                <span>약사 전화 상담</span>
               </div>
               <div className="flex items-center">
-                <span className="mr-1">🎫</span>
+                <Star className="w-4 h-4 mr-1 text-blue-300" />
                 <span>전용 할인 혜택</span>
               </div>
               <div className="flex items-center">
-                <span className="mr-1">📊</span>
+                <TrendingUp className="w-4 h-4 mr-1 text-purple-300" />
                 <span>AI 심화 분석</span>
               </div>
             </div>
@@ -351,7 +355,10 @@ export default function HomeScreen({
       <div className="mx-4 mb-6">
         <div className="p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-xl">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-bold text-black">🏆 주간 챌린지</h2>
+            <div className="flex items-center">
+              <Trophy className="w-5 h-5 text-yellow-600 mr-2" />
+              <h2 className="text-lg font-bold text-black">주간 챌린지</h2>
+            </div>
             <span className="text-sm font-semibold text-blue-600">
               {weeklyChallenge.daysLeft}일 남음
             </span>
@@ -385,8 +392,11 @@ export default function HomeScreen({
       <div className="mx-4 mb-6">
         <div className="p-4 bg-white shadow-sm rounded-xl">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-bold text-black">💡 오늘의 건강 팁</h2>
-            <span className="text-2xl">{healthTip.icon}</span>
+            <div className="flex items-center">
+              <Lightbulb className="w-5 h-5 text-yellow-500 mr-2" />
+              <h2 className="text-lg font-bold text-black">오늘의 건강 팁</h2>
+            </div>
+            <Droplets className="w-6 h-6 text-blue-500" />
           </div>
           <h3 className="mb-2 font-semibold">{healthTip.title}</h3>
           <p className="mb-3 text-sm text-gray-600">{healthTip.description}</p>
@@ -407,7 +417,10 @@ export default function HomeScreen({
       {/* 건강 뉴스 & 트렌드 */}
       <div className="mx-4 mb-6">
         <div className="mb-3">
-          <h2 className="text-lg font-bold text-black">📰 건강 뉴스 & 트렌드</h2>
+          <div className="flex items-center mb-2">
+            <Newspaper className="w-5 h-5 text-gray-700 mr-2" />
+            <h2 className="text-lg font-bold text-black">건강 뉴스 & 트렌드</h2>
+          </div>
           <p className="text-sm text-gray-600">최신 건강 정보를 확인하세요</p>
         </div>
         <div className="space-y-3">
@@ -421,9 +434,6 @@ export default function HomeScreen({
                     <span className="text-xs text-gray-500">
                       {news.source} • {news.time}
                     </span>
-                    <button className="text-blue-500">
-                      <Bookmark className="w-4 h-4" />
-                    </button>
                   </div>
                 </div>
                 <TrendingUp className="flex-shrink-0 w-6 h-6 ml-3 text-green-500" />

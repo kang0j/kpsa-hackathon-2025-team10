@@ -134,7 +134,7 @@ export default function CareScreen({
         {/* 제목 */}
         <div className="flex items-center justify-between pt-8 mb-8">
           <h1 className="text-2xl font-bold text-center flex-1">
-            7월 소비 패턴 분석
+            소비 패턴 분석
           </h1>
           <button 
             onClick={fetchData}
@@ -219,9 +219,7 @@ export default function CareScreen({
                 <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-center">
                   <div className="bg-white rounded-lg shadow px-3 py-1">
                     <div className="text-xs text-gray-600">
-                      <span className="text-green-600 font-semibold">좋은 음식: {Math.round(healthAnalysis.goodAmount / 1000)}k원</span>
-                      <br />
-                      <span className="text-red-600 font-semibold">나쁜 음식: {Math.round(healthAnalysis.badAmount / 1000)}k원</span>
+
                     </div>
                   </div>
                 </div>
@@ -258,18 +256,12 @@ export default function CareScreen({
                     {healthAnalysis.totalGoodScore.toLocaleString()}점
                   </div>
                   <div className="text-green-600">건강한 선택</div>
-                  <div className="text-xs text-green-500 mt-1">
-                    {Math.round(healthAnalysis.goodAmount / 1000)}k원
-                  </div>
                 </div>
                 <div className="text-center p-3 bg-red-100 rounded-lg">
                   <div className="text-red-700 font-bold text-lg">
                     {healthAnalysis.totalBadScore.toLocaleString()}점
                   </div>
                   <div className="text-red-600">건강하지 않은 선택</div>
-                  <div className="text-xs text-red-500 mt-1">
-                    {Math.round(healthAnalysis.badAmount / 1000)}k원
-                  </div>
                 </div>
               </div>
               <div className="mt-3 text-center">
@@ -312,7 +304,7 @@ export default function CareScreen({
           {supplementData && !loading && !error && (
             <div className="space-y-4">
               {/* 영양제 추천 목록 */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {supplementData["맞춤 영양제 추천"].map((supplement, index) => (
                   <div key={index} className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-200 text-center">
                     <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
@@ -356,37 +348,30 @@ export default function CareScreen({
           )}
         </div>
 
-        {/* 기존 광고 영역 (보조 광고) */}
+        {/* 기존 광고 영역 (보조 광고)
         <div className="mb-8 space-y-4">
           <div className="p-6 text-center bg-black rounded-xl">
             <div className="text-lg font-medium text-white">&lt;AD&gt;</div>
           </div>
-        </div>
+        </div> */}
 
         {/* 약사 상담 섹션 */}
         <div className="mb-6">
           <h2 className="text-2xl font-bold leading-tight text-black">
-            집 근처 약사님과
+            프리미엄 플랜을 통해
             <br />
-            바로 상담할 수 있어요
+            약사님과 바로 상담할 수 있어요
           </h2>
         </div>
 
         {/* 약사 상담 카드 */}
-        <div className="flex items-center justify-between p-4 mb-6 bg-emerald-50 rounded-2xl">
-          <div className="flex-1">
-            <h3 className="mb-1 text-lg font-bold text-black">
-              약사 건강 컨설팅
-            </h3>
-            <p className="mb-1 text-base text-black">&lt;약사 소개 한 줄&gt;</p>
-            <p className="text-base text-black">근처 500m</p>
-          </div>
-          <img
-            className="rounded-full w-14 h-14"
-            src="https://placehold.co/60x60"
-            alt="약사 프로필"
-          />
-        </div>
+        <div className="p-1 mb-4 bg-sky-50 rounded-xl">
+        <img
+          src="/images/home_pharm_cunsulting.gif"
+          alt="약사 건강 컨설팅"
+          className="w-full h-auto rounded-lg"
+        />
+      </div>
 
         {/* 더보기 버튼 */}
         {!showPremium && (
@@ -433,7 +418,6 @@ export default function CareScreen({
                     <p className="text-sm text-gray-600">
                       비타민D, 오메가3 풍부
                     </p>
-                    <p className="text-xs text-green-600">근처 샐러드바 3곳</p>
                   </div>
                   <div className="text-right">
                     <div className="text-sm font-semibold text-blue-600">
@@ -448,7 +432,6 @@ export default function CareScreen({
                   <div>
                     <h5 className="font-semibold text-black">버섯 현미밥</h5>
                     <p className="text-sm text-gray-600">비타민D, 식이섬유</p>
-                    <p className="text-xs text-green-600">근처 건강식당 2곳</p>
                   </div>
                   <div className="text-right">
                     <div className="text-sm font-semibold text-blue-600">
@@ -469,23 +452,20 @@ export default function CareScreen({
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center">
                     <img
-                      className="w-12 h-12 mr-3 rounded-full"
-                      src="https://placehold.co/50x50"
+                      className="w-12 h-12 mr-3 rounded-full object-cover"
+                      src="https://cdn.pixabay.com/photo/2024/05/30/13/39/ai-generated-8798551_1280.jpg"
                       alt="약사"
                     />
                     <div>
                       <h5 className="font-semibold text-black">
-                        김약사 (10년 경력)
+                        김동원 약사님
                       </h5>
                       <p className="text-sm text-gray-600">⭐ 4.9 (127 리뷰)</p>
                     </div>
                   </div>
-                  <button className="px-4 py-2 text-sm font-semibold text-white bg-green-500 rounded-lg">
-                    상담 예약
-                  </button>
                 </div>
                 <div className="text-sm text-gray-600">
-                  💬 "비타민D 부족 상담 가능한 시간: 오늘 오후 2-6시"
+                  💬 "상담 가능 시간: 오늘 오후 2-6시"
                 </div>
               </div>
             </div>
@@ -502,11 +482,9 @@ export default function CareScreen({
                       <span className="text-sm font-semibold text-red-700">
                         건강기능식품 20% 할인
                       </span>
-                      <p className="text-xs text-red-600">비타민D 제품 전용</p>
+                      <p className="text-xs text-red-600">모든 제품 사용 가능*</p>
                     </div>
-                    <button className="px-3 py-1 text-xs text-white bg-red-500 rounded">
-                      사용
-                    </button>
+                    
                   </div>
                 </div>
                 <div className="p-3 border-l-4 border-blue-400 rounded-lg bg-gradient-to-r from-blue-100 to-cyan-100">
@@ -515,11 +493,9 @@ export default function CareScreen({
                       <span className="text-sm font-semibold text-blue-700">
                         건강식 배달 15% 할인
                       </span>
-                      <p className="text-xs text-blue-600">추천 음식점 전용</p>
+                      <p className="text-xs text-blue-600">특정 쇼핑몰 사용 가능*</p>
                     </div>
-                    <button className="px-3 py-1 text-xs text-white bg-blue-500 rounded">
-                      사용
-                    </button>
+
                   </div>
                 </div>
               </div>
