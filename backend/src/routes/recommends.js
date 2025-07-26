@@ -11,7 +11,3 @@ const recomendsController = require('../controllers/recomends.controller');
 router.get('/:type/:id', recomendsController.getRecommendation);
 
 module.exports = router;
-
-
-
-module.exports = router;
