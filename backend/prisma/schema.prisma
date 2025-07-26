@@ -158,7 +158,9 @@ model TransactionItem {
   quantity      Int       @default(1)
   categoryId    String?
   category      Category? @relation(fields: [categoryId], references: [id])
-  isHealthy     Boolean   @default(false)
+  // isHealthy     Boolean   @default(false)
+  healthyScore  Int @default(0)
+  commentByAI   String?
 
   @@map("transaction_items")
 }

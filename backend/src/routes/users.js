@@ -236,6 +236,7 @@ const bcrypt = require('bcryptjs');
  */
 
 
+
 router.get('/', async (req, res) => {
   try {
     const users = await prisma.user.findMany({
@@ -263,6 +264,7 @@ router.get('/:id', async (req, res) => {
     res.status(500).json({ error: '서버 오류가 발생했습니다.' });
   }
 });
+
 
 
 router.post('/', async (req, res) => {

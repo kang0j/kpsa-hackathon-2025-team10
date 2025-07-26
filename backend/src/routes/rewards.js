@@ -31,7 +31,32 @@ const prisma = new PrismaClient();
  *         isActive:
  *           type: boolean
  *           description: 활성화 여부
- * 
+ *     UserGood:
+ *       type: object
+ *       description: 사용자가 교환한 굿즈 정보
+ *       properties:
+ *        id:
+ *          type: string
+ *          description: 굿즈 교환 내역의 고유 ID
+ *        userId:
+ *          type: string
+ *          description: 굿즈를 교환한 사용자의 ID
+ *        goodId:
+ *          type: string
+ *          description: 교환한 굿즈의 ID
+ *        claimedAt:
+ *          type: string
+ *          format: date-time
+ *          description: 굿즈를 교환한 일시
+ *        usedAt:
+ *          type: string
+ *          format: date-time
+ *          nullable: true
+ *          description: 굿즈(쿠폰)를 사용한 일시
+ *        couponCode:
+ *          type: string
+ *          nullable: true
+ *          description: 굿즈 타입이 COUPON일 경우 발급되는 고유 코드
  *     RewardPointHistory:
  *       type: object
  *       properties:

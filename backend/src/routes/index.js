@@ -8,12 +8,18 @@ const users = require('./users');
 const transactions = require('./transactions');
 const rewards = require('./rewards');
 const consultations = require('./consultations');
+const login = require('./login');
+const receipts = require('./receipts');
+// const recomends = require('./recomdends')
 
 // 각 라우터에 기본 경로를 설정해줍니다.
 router.use('/users', users);
 router.use('/transactions', transactions);
 router.use('/rewards', rewards);
 router.use('/consultations', consultations);
+router.use('/login', login);
+router.use('./recipets', reciepts)
+// router.use('/recomends', recomends)
 
 
 module.exports = router;

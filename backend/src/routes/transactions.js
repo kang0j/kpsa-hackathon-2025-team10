@@ -23,9 +23,12 @@ const prisma = new PrismaClient();
  *         quantity:
  *           type: integer
  *           description: 수량
- *         isHealthy:
- *           type: boolean
- *           description: 건강 상품 여부
+ *         healthyScore:
+ *           type: integer
+ *           description: -5~5까지의 값이 AI가 평가
+ *         commentByAI:
+ *           type: string
+ *           description: ai가 내린 코멘트
  *     Transaction:
  *       type: object
  *       properties:
@@ -93,8 +96,6 @@ const prisma = new PrismaClient();
  *                 type: integer
  *               categoryId:
  *                 type: string
- *               isHealthy:
- *                 type: boolean
  *       example:
  *         userId: "clxqe81o50000u1zkh9n8c7vj"
  *         storeName: "행복 약국"
@@ -104,11 +105,9 @@ const prisma = new PrismaClient();
  *           - itemName: "비타민C"
  *             price: 10000
  *             quantity: 1
- *             isHealthy: true
  *           - itemName: "밴드"
  *             price: 5000
  *             quantity: 1
- *             isHealthy: false
  */
 
 /**
