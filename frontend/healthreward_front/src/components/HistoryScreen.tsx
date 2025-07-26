@@ -81,35 +81,52 @@ export default function HistoryScreen({
     return dates;
   };
 
+  // 날짜별 포인트 데이터 계산 (캘린더용)
+  const getDatePointsData = () => {
+    const datePoints: { [key: string]: number } = {};
+    transactions.forEach((transaction) => {
+      const date = new Date(transaction.transactionDate);
+      const dateStr = `${date.getFullYear()}-${String(
+        date.getMonth() + 1
+      ).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+      
+      const points = calculateHealthPoints(transaction.items);
+      if (!datePoints[dateStr]) {
+        datePoints[dateStr] = 0;
+      }
+      datePoints[dateStr] += points;
+    });
+    return datePoints;
+  };
+
   // 거래 상세보기
   const handleTransactionDetail = (transaction: Transaction) => {
     setSelectedTransaction(transaction);
     setShowDetailModal(true);
   };
 
-  // 건강 점수 계산
+  // 건강 포인트 계산 (양수만 합산)
+  const calculateHealthPoints = (items: ReceiptItem[]) => {
+    return items.reduce((sum, item) => {
+      return item.healthyScore > 0 ? sum + item.healthyScore : sum;
+    }, 0);
+  };
+
+  // 건강 점수 계산 (평균)
   const calculateHealthScore = (items: ReceiptItem[]) => {
     if (items.length === 0) return 0;
     const totalScore = items.reduce((sum, item) => sum + item.healthyScore, 0);
     return Math.round(totalScore / items.length);
   };
 
-  // 상태별 색상
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "PENDING":
-        return "text-yellow-600 bg-yellow-100";
-      case "VERIFIED":
-        return "text-green-600 bg-green-100";
-      case "REJECTED":
-        return "text-red-600 bg-red-100";
-      default:
-        return "text-gray-600 bg-gray-100";
-    }
-  };
-
   const selectedDateTransactions = getTransactionsForDate(selectedDate);
   const transactionDates = getTransactionDates();
+  const datePointsData = getDatePointsData();
+
+  // 선택된 날짜의 총 포인트 계산
+  const dailyTotalPoints = selectedDateTransactions.reduce((sum, transaction) => {
+    return sum + calculateHealthPoints(transaction.items);
+  }, 0);
 
   return (
     <div className="flex flex-col h-screen">
@@ -142,6 +159,7 @@ export default function HistoryScreen({
           onDateChange={setSelectedDate}
           transactionDates={transactionDates}
           transactions={transactions}
+          datePointsData={datePointsData}
         />
 
         {/* 로딩 상태 */}
@@ -165,9 +183,14 @@ export default function HistoryScreen({
                 구매내역
               </h3>
               {selectedDateTransactions.length > 0 && (
-                <span className="text-sm text-gray-500">
-                  {selectedDateTransactions.length}건
-                </span>
+                <div className="text-right">
+                  <span className="text-sm text-gray-500">
+                    {selectedDateTransactions.length}건
+                  </span>
+                  <div className="text-sm font-semibold text-green-600">
+                    일일 총 포인트: +{dailyTotalPoints}
+                  </div>
+                </div>
               )}
             </div>
 
@@ -204,43 +227,29 @@ export default function HistoryScreen({
                           </p>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <span
-                          className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                            transaction.status
-                          )}`}
-                        >
-                          {transaction.status === "PENDING"
-                            ? "검증대기"
-                            : transaction.status === "VERIFIED"
-                            ? "검증완료"
-                            : "거부됨"}
-                        </span>
-                      </div>
                     </div>
 
-                    {/* 금액과 건강점수 */}
+                    {/* 포인트와 금액 */}
                     <div className="p-4 mb-4 bg-gradient-to-r from-blue-50 to-green-50 rounded-xl">
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="mb-1 text-sm text-gray-600">
-                            총 구매금액
+                            획득 포인트
                           </p>
-                          <p className="text-2xl font-bold text-gray-900">
-                            {transaction.totalAmount.toLocaleString()}원
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="mb-1 text-sm text-gray-600">건강점수</p>
                           <div className="flex items-center">
-                            <Star className="w-5 h-5 mr-1 text-yellow-500" />
-                            <span className="text-xl font-bold text-green-600">
-                              {calculateHealthScore(transaction.items)}
-                            </span>
-                            <span className="ml-1 text-sm text-gray-500">
-                              /100
+                            <Star className="w-6 h-6 mr-2 text-yellow-500" />
+                            <span className="text-3xl font-bold text-green-600">
+                              +{calculateHealthPoints(transaction.items)}
                             </span>
                           </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="mb-1 text-xs text-gray-500">
+                            구매금액
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            {transaction.totalAmount.toLocaleString()}원
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -270,14 +279,17 @@ export default function HistoryScreen({
                                 x{item.quantity}
                               </span>
                             </div>
-                            <div className="flex items-center space-x-2">
+                            <div className="flex items-center space-x-3">
                               <div className="flex items-center">
-                                <Star className="w-3 h-3 mr-1 text-yellow-500" />
-                                <span className="text-xs font-medium">
-                                  {item.healthyScore}
+                                <Star className="w-4 h-4 mr-1 text-yellow-500" />
+                                <span className={`text-sm font-bold ${
+                                  item.healthyScore > 0 ? 'text-green-600' : 
+                                  item.healthyScore < 0 ? 'text-red-600' : 'text-gray-500'
+                                }`}>
+                                  {item.healthyScore > 0 ? '+' : ''}{item.healthyScore}
                                 </span>
                               </div>
-                              <span className="text-sm font-semibold text-gray-700">
+                              <span className="text-xs text-gray-400">
                                 {item.price.toLocaleString()}원
                               </span>
                             </div>
@@ -313,9 +325,9 @@ export default function HistoryScreen({
                                 : "bg-red-500"
                             }`}
                             style={{
-                              width: `${calculateHealthScore(
+                              width: `${Math.max(0, calculateHealthScore(
                                 transaction.items
-                              )}%`,
+                              ))}%`,
                             }}
                           ></div>
                         </div>
@@ -363,24 +375,16 @@ export default function HistoryScreen({
                   {selectedTransaction.totalAmount.toLocaleString()}원
                 </p>
                 <p>
+                  <span className="font-semibold">획득 포인트:</span>{" "}
+                  <span className="text-green-600 font-bold">
+                    +{calculateHealthPoints(selectedTransaction.items)}
+                  </span>
+                </p>
+                <p>
                   <span className="font-semibold">날짜:</span>{" "}
                   {new Date(selectedTransaction.transactionDate).toLocaleString(
                     "ko-KR"
                   )}
-                </p>
-                <p>
-                  <span className="font-semibold">상태:</span>
-                  <span
-                    className={`ml-2 px-2 py-1 rounded-full text-xs ${getStatusColor(
-                      selectedTransaction.status
-                    )}`}
-                  >
-                    {selectedTransaction.status === "PENDING"
-                      ? "검증 대기"
-                      : selectedTransaction.status === "VERIFIED"
-                      ? "검증 완료"
-                      : "거부됨"}
-                  </span>
                 </p>
               </div>
             </div>
@@ -399,8 +403,11 @@ export default function HistoryScreen({
                       </h4>
                       <div className="flex items-center ml-2 space-x-1">
                         <Star className="w-4 h-4 text-yellow-500" />
-                        <span className="text-sm font-bold">
-                          {item.healthyScore}
+                        <span className={`text-sm font-bold ${
+                          item.healthyScore > 0 ? 'text-green-600' : 
+                          item.healthyScore < 0 ? 'text-red-600' : 'text-gray-500'
+                        }`}>
+                          {item.healthyScore > 0 ? '+' : ''}{item.healthyScore}
                         </span>
                       </div>
                     </div>
@@ -413,39 +420,38 @@ export default function HistoryScreen({
 
                     <div className="flex items-center justify-between text-sm">
                       <span>수량: {item.quantity}개</span>
-                      <span className="font-semibold">
-                        {item.price.toLocaleString()}원
-                      </span>
+                      <div className="flex items-center space-x-2">
+                        <span className={`font-bold ${
+                          item.healthyScore > 0 ? 'text-green-600' : 
+                          item.healthyScore < 0 ? 'text-red-600' : 'text-gray-500'
+                        }`}>
+                          {item.healthyScore > 0 ? '+' : ''}{item.healthyScore}점
+                        </span>
+                        <span className="text-xs text-gray-400">
+                          {item.price.toLocaleString()}원
+                        </span>
+                      </div>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* 건강 점수 요약 */}
+            {/* 건강 포인트 요약 */}
             <div className="p-4 mt-4 bg-green-50 rounded-xl">
-              <h3 className="mb-2 font-bold text-green-700">건강 점수 요약</h3>
-              <div className="flex items-center space-x-2">
-                <div className="flex-1 h-3 bg-gray-200 rounded-full">
-                  <div
-                    className="h-3 transition-all duration-300 bg-green-500 rounded-full"
-                    style={{
-                      width: `${calculateHealthScore(
-                        selectedTransaction.items
-                      )}%`,
-                    }}
-                  ></div>
-                </div>
-                <span className="text-sm font-bold text-green-700">
-                  {calculateHealthScore(selectedTransaction.items)}/100점
+              <h3 className="mb-2 font-bold text-green-700">건강 포인트 요약</h3>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium">총 획득 포인트</span>
+                <span className="text-lg font-bold text-green-700">
+                  +{calculateHealthPoints(selectedTransaction.items)}
                 </span>
               </div>
-              <p className="mt-2 text-xs text-green-600">
-                {calculateHealthScore(selectedTransaction.items) >= 70
-                  ? "건강한 선택입니다! 👍"
-                  : calculateHealthScore(selectedTransaction.items) >= 40
-                  ? "보통 수준입니다. 🤔"
-                  : "더 건강한 선택을 고려해보세요. 💪"}
+              <p className="text-xs text-green-600">
+                {calculateHealthPoints(selectedTransaction.items) >= 10
+                  ? "훌륭한 건강 포인트 획득! 👍"
+                  : calculateHealthPoints(selectedTransaction.items) >= 5
+                  ? "좋은 선택입니다! 🤔"
+                  : "더 건강한 선택으로 포인트를 늘려보세요! 💪"}
               </p>
             </div>
           </div>

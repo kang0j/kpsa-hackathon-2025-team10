@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { AlertCircle, RefreshCw } from "lucide-react";
+import { ExternalLink, AlertCircle, RefreshCw } from "lucide-react";
 import BottomTab from "./BottomTab";
 import CareScreenPremium from "./CareScreenPremium";
 import { supplementService, transactionService } from "../../api/services";
@@ -68,6 +68,13 @@ export default function CareScreen({
     const premiumStatus = localStorage.getItem('isPremiumUser');
     if (premiumStatus === 'true') {
       setIsPremiumUser(true);
+    }
+    
+    // 홈에서 프리미엄 플랜 버튼을 눌렀는지 확인
+    const showPremiumPlan = localStorage.getItem('showPremiumPlan');
+    if (showPremiumPlan === 'true') {
+      setShowPremium(true);
+      localStorage.removeItem('showPremiumPlan'); // 한번 사용 후 제거
     }
     
     // 영양제 추천 데이터와 거래 데이터 가져오기
@@ -233,6 +240,15 @@ export default function CareScreen({
 
         {/* AI 분석 결과 - 실제 데이터 기반 */}
         <div className="mb-8">
+          {supplementData && (
+            <div className="p-4 bg-blue-50 rounded-xl border border-blue-200 mb-4">
+              <h3 className="font-semibold text-blue-800 mb-2">🤖 AI 건강 분석</h3>
+              <p className="text-sm text-blue-700 leading-relaxed">
+                {supplementData["ai 추천 사항"]}
+              </p>
+            </div>
+          )}
+          
           {healthAnalysis && (
             <div className="p-4 bg-gradient-to-r from-green-50 to-red-50 rounded-xl border mb-4">
               <h3 className="font-semibold text-gray-800 mb-2">📊 소비 패턴 분석</h3>
@@ -267,6 +283,8 @@ export default function CareScreen({
           )}
           
           <h2 className="text-2xl font-bold leading-tight text-black">
+            소비를 분석해보니,
+            <br />
             {supplementData?.oneCommand || "분석 중입니다..."}
           </h2>
         </div>

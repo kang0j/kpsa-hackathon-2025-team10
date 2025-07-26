@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { ShoppingCart } from "lucide-react";
 import BottomTab from "./BottomTab";
 
 interface Product {
@@ -18,12 +19,19 @@ interface Product {
   isPremiumOnly?: boolean;
 }
 
+interface CartItem {
+  product: Product;
+  quantity: number;
+}
+
 interface Category {
   id: string;
   name: string;
   icon: string;
   count: number;
 }
+
+type Screen = 'store' | 'product' | 'cart' | 'checkout' | 'success';
 
 export default function StoreScreen({
   onTabChange,
@@ -33,6 +41,14 @@ export default function StoreScreen({
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [currentScreen, setCurrentScreen] = useState<Screen>('store');
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [orderInfo, setOrderInfo] = useState({
+    name: localStorage.getItem('userName') || 'userName',
+    phone: '01000000000',
+    address: '서울특별시 관악구 관악로 1',
+    paymentMethod: 'card'
+  });
 
   const products: Product[] = [
     {
@@ -183,18 +199,337 @@ export default function StoreScreen({
 
   const recommendedProducts = products.filter((p) => p.isRecommended);
 
-  if (selectedProduct) {
+  // 장바구니 관련 함수들
+  const addToCart = (product: Product, quantity: number = 1) => {
+    setCart(prev => {
+      const existingItem = prev.find(item => item.product.id === product.id);
+      if (existingItem) {
+        return prev.map(item =>
+          item.product.id === product.id
+            ? { ...item, quantity: item.quantity + quantity }
+            : item
+        );
+      }
+      return [...prev, { product, quantity }];
+    });
+  };
+
+  const removeFromCart = (productId: string) => {
+    setCart(prev => prev.filter(item => item.product.id !== productId));
+  };
+
+  const updateCartQuantity = (productId: string, quantity: number) => {
+    if (quantity <= 0) {
+      removeFromCart(productId);
+      return;
+    }
+    setCart(prev => prev.map(item =>
+      item.product.id === productId
+        ? { ...item, quantity }
+        : item
+    ));
+  };
+
+  const getTotalPrice = () => {
+    return cart.reduce((total, item) => total + (item.product.price * item.quantity), 0);
+  };
+
+  const getTotalItems = () => {
+    return cart.reduce((total, item) => total + item.quantity, 0);
+  };
+
+  // 바로 구매
+  const buyNow = (product: Product) => {
+    setCart([{ product, quantity: 1 }]);
+    setCurrentScreen('checkout');
+  };
+
+  // 주문 완료
+  const completeOrder = () => {
+    // 실제로는 API 호출
+    setTimeout(() => {
+      setCurrentScreen('success');
+      setCart([]);
+    }, 1000);
+  };
+
+  // 주문 성공 화면
+  if (currentScreen === 'success') {
+    return (
+      <div className="flex flex-col min-h-screen bg-white">
+        <div className="flex-1 flex flex-col items-center justify-center p-6">
+          <div className="text-6xl mb-4">✅</div>
+          <h1 className="text-2xl font-bold mb-2">주문이 완료되었습니다!</h1>
+          <p className="text-gray-600 mb-6 text-center">
+            건강한 선택을 해주셔서 감사합니다.<br/>
+            배송은 2-3일 내에 시작됩니다.
+          </p>
+          <button
+            onClick={() => {
+              setCurrentScreen('store');
+              setSelectedProduct(null);
+            }}
+            className="w-full max-w-sm py-4 bg-blue-600 text-white font-bold rounded-xl"
+          >
+            쇼핑 계속하기
+          </button>
+        </div>
+        <BottomTab selected="store" onTabChange={onTabChange} />
+      </div>
+    );
+  }
+
+  // 결제 화면
+  if (currentScreen === 'checkout') {
+    const totalPrice = getTotalPrice();
+    const shippingFee = totalPrice >= 50000 ? 0 : 3000;
+    const finalPrice = totalPrice + shippingFee;
+
+    return (
+      <div className="flex flex-col min-h-screen bg-gray-50">
+        {/* 헤더 */}
+        <div className="flex items-center justify-between p-4 bg-white border-b">
+          <button
+            onClick={() => setCurrentScreen('cart')}
+            className="text-2xl"
+          >
+            ←
+          </button>
+          <h1 className="text-lg font-bold">주문/결제</h1>
+          <div></div>
+        </div>
+
+        <div className="flex-1 p-4 space-y-4">
+          {/* 주문 상품 */}
+          <div className="bg-white p-4 rounded-xl">
+            <h2 className="font-bold mb-3">주문 상품</h2>
+            {cart.map(item => (
+              <div key={item.product.id} className="flex items-center space-x-3 mb-3">
+                <img
+                  src={item.product.image}
+                  alt={item.product.name}
+                  className="w-16 h-16 rounded-lg object-cover"
+                />
+                <div className="flex-1">
+                  <h3 className="font-semibold text-sm">{item.product.name}</h3>
+                  <p className="text-xs text-gray-500">{item.product.brand}</p>
+                  <p className="text-sm">수량: {item.quantity}개</p>
+                </div>
+                <div className="text-right">
+                  <p className="font-bold">₩{(item.product.price * item.quantity).toLocaleString()}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* 배송 정보 */}
+          <div className="bg-white p-4 rounded-xl">
+            <h2 className="font-bold mb-3">배송 정보</h2>
+            <div className="space-y-3">
+              <input
+                type="text"
+                placeholder="받는 분 성함"
+                value={orderInfo.name}
+                onChange={(e) => setOrderInfo(prev => ({ ...prev, name: e.target.value }))}
+                className="w-full p-3 bg-gray-100 rounded-lg"
+              />
+              <input
+                type="text"
+                placeholder="연락처"
+                value={orderInfo.phone}
+                onChange={(e) => setOrderInfo(prev => ({ ...prev, phone: e.target.value }))}
+                className="w-full p-3 bg-gray-100 rounded-lg"
+              />
+              <textarea
+                placeholder="배송 주소"
+                value={orderInfo.address}
+                onChange={(e) => setOrderInfo(prev => ({ ...prev, address: e.target.value }))}
+                className="w-full p-3 bg-gray-100 rounded-lg h-20 resize-none"
+              />
+            </div>
+          </div>
+
+          {/* 결제 방법 */}
+          <div className="bg-white p-4 rounded-xl">
+            <h2 className="font-bold mb-3">결제 방법</h2>
+            <div className="space-y-2">
+              {[
+                { id: 'card', name: '신용카드', icon: '' },
+                { id: 'bank', name: '계좌이체', icon: '' },
+                { id: 'kakao', name: '카카오페이', icon: '' }
+              ].map(method => (
+                <label key={method.id} className="flex items-center p-3 bg-gray-50 rounded-lg cursor-pointer">
+                  <input
+                    type="radio"
+                    name="payment"
+                    value={method.id}
+                    checked={orderInfo.paymentMethod === method.id}
+                    onChange={(e) => setOrderInfo(prev => ({ ...prev, paymentMethod: e.target.value }))}
+                    className="mr-3"
+                  />
+                  <span className="mr-2">{method.icon}</span>
+                  <span>{method.name}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* 결제 금액 */}
+          <div className="bg-white p-4 rounded-xl">
+            <h2 className="font-bold mb-3">결제 금액</h2>
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <span>상품 금액</span>
+                <span>₩{totalPrice.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>배송비</span>
+                <span className={shippingFee === 0 ? 'text-green-600' : ''}>
+                  {shippingFee === 0 ? '무료' : `₩${shippingFee.toLocaleString()}`}
+                </span>
+              </div>
+              {totalPrice < 50000 && (
+                <p className="text-xs text-gray-500">5만원 이상 구매 시 무료배송</p>
+              )}
+              <hr />
+              <div className="flex justify-between font-bold text-lg">
+                <span>총 결제 금액</span>
+                <span className="text-blue-600">₩{finalPrice.toLocaleString()}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 결제 버튼 */}
+        <div className="p-4 bg-white border-t">
+          <button
+            onClick={completeOrder}
+            disabled={!orderInfo.name || !orderInfo.phone || !orderInfo.address}
+            className="w-full py-4 bg-blue-600 text-white font-bold rounded-xl disabled:bg-gray-300"
+          >
+            ₩{finalPrice.toLocaleString()} 결제하기
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // 장바구니 화면
+  if (currentScreen === 'cart') {
+    return (
+      <div className="flex flex-col min-h-screen bg-gray-50">
+        {/* 헤더 */}
+        <div className="flex items-center justify-between p-4 bg-white border-b">
+          <button
+            onClick={() => setCurrentScreen('store')}
+            className="text-2xl"
+          >
+            ←
+          </button>
+          <h1 className="text-lg font-bold">장바구니</h1>
+          <div></div>
+        </div>
+
+        {cart.length === 0 ? (
+          <div className="flex-1 flex flex-col items-center justify-center p-6">
+            <div className="text-6xl mb-4">🛒</div>
+            <h2 className="text-xl font-bold mb-2">장바구니가 비어있습니다</h2>
+            <p className="text-gray-600 mb-6">건강한 상품을 담아보세요!</p>
+            <button
+              onClick={() => setCurrentScreen('store')}
+              className="px-6 py-3 bg-blue-600 text-white font-bold rounded-xl"
+            >
+              쇼핑하러 가기
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="flex-1 p-4">
+              <div className="bg-white rounded-xl p-4">
+                {cart.map(item => (
+                  <div key={item.product.id} className="flex items-center space-x-3 py-4 border-b last:border-b-0">
+                    <img
+                      src={item.product.image}
+                      alt={item.product.name}
+                      className="w-20 h-20 rounded-lg object-cover"
+                    />
+                    <div className="flex-1">
+                      <h3 className="font-semibold">{item.product.name}</h3>
+                      <p className="text-sm text-gray-500">{item.product.brand}</p>
+                      <p className="font-bold text-blue-600">₩{item.product.price.toLocaleString()}</p>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => updateCartQuantity(item.product.id, item.quantity - 1)}
+                        className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center"
+                      >
+                        -
+                      </button>
+                      <span className="w-8 text-center">{item.quantity}</span>
+                      <button
+                        onClick={() => updateCartQuantity(item.product.id, item.quantity + 1)}
+                        className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center"
+                      >
+                        +
+                      </button>
+                      <button
+                        onClick={() => removeFromCart(item.product.id)}
+                        className="ml-2 text-red-500"
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 하단 결제 정보 */}
+            <div className="p-4 bg-white border-t">
+              <div className="flex justify-between items-center mb-4">
+                <span className="text-lg font-bold">총 {getTotalItems()}개</span>
+                <span className="text-xl font-bold text-blue-600">₩{getTotalPrice().toLocaleString()}</span>
+              </div>
+              <button
+                onClick={() => setCurrentScreen('checkout')}
+                className="w-full py-4 bg-blue-600 text-white font-bold rounded-xl"
+              >
+                주문하기
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    );
+  }
+
+  // 상품 상세 화면
+  if (currentScreen === 'product' && selectedProduct) {
     return (
       <div className="flex flex-col min-h-screen bg-white">
         {/* 상품 상세 헤더 */}
         <div className="relative flex items-center justify-center p-4 border-b">
           <button
-            onClick={() => setSelectedProduct(null)}
+            onClick={() => {
+              setSelectedProduct(null);
+              setCurrentScreen('store');
+            }}
             className="absolute text-2xl left-4"
           >
             ←
           </button>
           <h1 className="text-lg font-bold">상품 상세</h1>
+          <div
+            onClick={() => setCurrentScreen('cart')}
+            className="absolute right-4 cursor-pointer relative"
+          >
+            <ShoppingCart className="w-6 h-6" />
+            {getTotalItems() > 0 && (
+              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                {getTotalItems()}
+              </span>
+            )}
+          </div>
         </div>
 
         {/* 상품 이미지 */}
@@ -275,10 +610,19 @@ export default function StoreScreen({
         {/* 구매 버튼 */}
         <div className="p-6 bg-white border-t">
           <div className="flex space-x-3">
-            <button className="flex-1 py-4 font-bold text-gray-700 bg-gray-200 rounded-xl">
+            <button 
+              onClick={() => {
+                addToCart(selectedProduct);
+                alert('장바구니에 추가되었습니다!');
+              }}
+              className="flex-1 py-4 font-bold text-gray-700 bg-gray-200 rounded-xl"
+            >
               장바구니
             </button>
-            <button className="flex-1 py-4 font-bold text-white bg-blue-600 rounded-xl">
+            <button 
+              onClick={() => buyNow(selectedProduct)}
+              className="flex-1 py-4 font-bold text-white bg-blue-600 rounded-xl"
+            >
               바로 구매
             </button>
           </div>
@@ -287,13 +631,24 @@ export default function StoreScreen({
     );
   }
 
+  // 메인 스토어 화면
   return (
     <div className="flex flex-col min-h-screen pb-10 bg-gray-50">
       {/* 헤더 */}
       <div className="px-6 py-4 pt-8 bg-white">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-2xl font-bold">건강 스토어</h1>
-          <button className="text-2xl">🛒</button>
+          <div
+            onClick={() => setCurrentScreen('cart')}
+            className="cursor-pointer relative"
+          >
+            <ShoppingCart className="w-6 h-6" />
+            {getTotalItems() > 0 && (
+              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                {getTotalItems()}
+              </span>
+            )}
+          </div>
         </div>
 
         {/* 검색바 */}
@@ -348,7 +703,10 @@ export default function StoreScreen({
               {recommendedProducts.map((product) => (
                 <div
                   key={product.id}
-                  onClick={() => setSelectedProduct(product)}
+                  onClick={() => {
+                    setSelectedProduct(product);
+                    setCurrentScreen('product');
+                  }}
                   className="flex-shrink-0 w-40 cursor-pointer"
                 >
                   <div className="relative">
@@ -403,7 +761,10 @@ export default function StoreScreen({
             {filteredProducts.map((product) => (
               <div
                 key={product.id}
-                onClick={() => setSelectedProduct(product)}
+                onClick={() => {
+                  setSelectedProduct(product);
+                  setCurrentScreen('product');
+                }}
                 className="p-4 transition-shadow bg-white shadow-sm cursor-pointer hover:shadow-md"
               >
                 <div className="relative mb-3">

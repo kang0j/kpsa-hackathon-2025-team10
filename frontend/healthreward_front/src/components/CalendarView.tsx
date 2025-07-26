@@ -5,13 +5,15 @@ type CalendarViewProps = {
   onDateChange: (date: string) => void;
   transactionDates?: string[]; // 거래가 있는 날짜들 ['2023-04-26', ...]
   transactions?: any[]; // 전체 거래 데이터
+  datePointsData?: { [key: string]: number }; // 날짜별 포인트 데이터
 };
 
 const CalendarView = ({ 
   selectedDate, 
   onDateChange, 
   transactionDates = [], 
-  transactions = [] 
+  transactions = [],
+  datePointsData = {}
 }: CalendarViewProps) => {
   // selectedDate를 파싱해서 초기값 설정
   const parseSelectedDate = (dateStr: string) => {
@@ -70,6 +72,13 @@ const CalendarView = ({
     setSelectedDay(today.getDate());
   };
 
+  // 건강 포인트 계산 (양수만 합산)
+  const calculateHealthPoints = (items: any[]) => {
+    return items.reduce((sum, item) => {
+      return item.healthyScore > 0 ? sum + item.healthyScore : sum;
+    }, 0);
+  };
+
   // 특정 날짜에 거래가 있는지 확인
   const hasTransactionOnDate = (day: number | null) => {
     if (day === null) return false;
@@ -77,7 +86,7 @@ const CalendarView = ({
     return transactionDates.includes(dateStr);
   };
 
-  // 특정 날짜의 거래 개수와 총 금액 계산
+  // 특정 날짜의 거래 개수와 총 포인트 계산
   const getDateInfo = (day: number | null) => {
     if (day === null) return null;
     const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
@@ -90,10 +99,10 @@ const CalendarView = ({
 
     if (dayTransactions.length === 0) return null;
 
-    const totalAmount = dayTransactions.reduce((sum, t) => sum + t.totalAmount, 0);
+    const totalPoints = dayTransactions.reduce((sum, t) => sum + calculateHealthPoints(t.items), 0);
     const count = dayTransactions.length;
 
-    return { count, totalAmount };
+    return { count, totalPoints };
   };
 
   // 선택된 날짜의 거래 정보
@@ -160,14 +169,14 @@ const CalendarView = ({
                 {day}
               </div>
               
-              {/* 거래 정보 표시 */}
+              {/* 거래 정보 표시 - 포인트 중심 */}
               {dateInfo && (
                 <div className="text-[10px] text-center mt-1">
                   <div className="text-green-600 font-bold">
-                    {dateInfo.count}건
+                    +{dateInfo.totalPoints}
                   </div>
-                  <div className="text-gray-500">
-                    {Math.round(dateInfo.totalAmount / 1000)}k
+                  <div className="text-gray-400 text-[8px]">
+                    {dateInfo.count}건
                   </div>
                 </div>
               )}
@@ -186,7 +195,7 @@ const CalendarView = ({
         </button>
       </div>
 
-      {/* 선택된 날짜 요약 정보 */}
+      {/* 선택된 날짜 요약 정보 - 포인트 중심 */}
       {selectedDateTransactions.length > 0 && (
         <div className="mt-6">
           <h4 className="font-semibold text-gray-800 mb-3">
@@ -194,7 +203,7 @@ const CalendarView = ({
           </h4>
           <div className="space-y-2">
             {selectedDateTransactions.map((transaction, idx) => (
-              <div key={idx} className="p-3 text-sm bg-gradient-to-r from-blue-50 to-green-50 rounded-xl border border-blue-100">
+              <div key={idx} className="p-3 text-sm bg-gradient-to-r from-green-50 to-blue-50 rounded-xl border border-green-100">
                 <div className="flex justify-between items-center">
                   <div>
                     <p className="font-semibold text-gray-800">{transaction.storeName}</p>
@@ -207,27 +216,27 @@ const CalendarView = ({
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-bold text-blue-600">
-                      {transaction.totalAmount.toLocaleString()}원
+                    <p className="font-bold text-green-600 text-lg">
+                      +{calculateHealthPoints(transaction.items)}점
                     </p>
-                    <p className="text-xs text-green-600">
-                      건강점수: {Math.round(transaction.items.reduce((sum: number, item: any) => sum + item.healthyScore, 0) / transaction.items.length)}
+                    <p className="text-xs text-gray-400">
+                      {transaction.totalAmount.toLocaleString()}원
                     </p>
                   </div>
                 </div>
               </div>
             ))}
             
-            {/* 일일 총계 */}
+            {/* 일일 총계 - 포인트 중심 */}
             {selectedDateTransactions.length > 1 && (
-              <div className="p-3 bg-gray-100 rounded-xl border-t-2 border-blue-500">
+              <div className="p-3 bg-green-100 rounded-xl border-t-2 border-green-500">
                 <div className="flex justify-between items-center">
-                  <span className="font-semibold text-gray-800">일일 총계</span>
+                  <span className="font-semibold text-gray-800">일일 누적 포인트</span>
                   <div className="text-right">
-                    <p className="font-bold text-gray-800">
-                      {selectedDateTransactions.reduce((sum, t) => sum + t.totalAmount, 0).toLocaleString()}원
+                    <p className="font-bold text-green-600 text-xl">
+                      +{selectedDateTransactions.reduce((sum, t) => sum + calculateHealthPoints(t.items), 0)}점
                     </p>
-                    <p className="text-xs text-gray-600">
+                    <p className="text-xs text-gray-500">
                       {selectedDateTransactions.length}건의 구매
                     </p>
                   </div>

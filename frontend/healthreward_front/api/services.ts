@@ -127,6 +127,12 @@ export const userService = {
   // 사용자 삭제
   deleteUser: async (id: string): Promise<void> => {
     await apiClient.delete(`/api/users/${id}`);
+  },
+
+  // 사용자 정보 조회 (포인트 포함)
+  getUserInfo: async (userId: string): Promise<User> => {
+    const response = await apiClient.get(`/api/users/${userId}`);
+    return response.data;
   }
 };
 

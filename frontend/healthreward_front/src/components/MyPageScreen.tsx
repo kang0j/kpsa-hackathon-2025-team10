@@ -169,13 +169,7 @@ export default function MyPageScreen({
         </div>
 
         {/* 소비 통계 */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="p-3 text-center rounded-lg bg-blue-50">
-            <div className="text-lg font-bold text-blue-600">
-              ₩{(userProfile.totalExpenses / 10000).toFixed(0)}만원
-            </div>
-            <div className="text-xs text-gray-600">총 소비</div>
-          </div>
+        <div className="grid grid-cols-1 gap-4">
           <div className="p-3 text-center rounded-lg bg-green-50">
             <div className="text-lg font-bold text-green-600">
               {Math.round(
