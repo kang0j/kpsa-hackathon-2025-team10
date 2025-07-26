@@ -1,6 +1,10 @@
 // 필요한 모듈들을 가져옵니다.
 const express = require('express');
 const { PrismaClient } = require('@prisma/client');
+const swaggerUi = require('swagger-ui-express');
+const specs = require('./config/swagger'); // swagger.js 설정 파일 경로
+
+
 
 // Express 애플리케이션을 생성합니다.
 const app = express();
@@ -26,6 +30,10 @@ app.use('/api', apiRoutes);
 app.get('/', (req, res) => {
   res.status(200).send('API 서버가 성공적으로 실행되었습니다.');
 });
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
+
+
 
 // 서버를 시작하고 지정된 포트에서 요청을 수신 대기합니다.
 app.listen(PORT, () => {
