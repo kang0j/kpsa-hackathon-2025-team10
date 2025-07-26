@@ -24,7 +24,7 @@ export default function App() {
   };
 
   return (
-    <div className="max-w-sm min-h-screen mx-auto text-gray-900 bg-white shadow-md">
+    <div className="max-w-sm min-h-screen mx-auto text-gray-900 bg-white shadow-md no-scrollbar">
       {!isLoggedIn ? (
         isSignup ? (
           <SignupForm
