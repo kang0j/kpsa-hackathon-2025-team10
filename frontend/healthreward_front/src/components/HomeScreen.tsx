@@ -1,6 +1,12 @@
-export default function HomeScreen() {
+import BottomTab from "./BottomTab";
+
+export default function HomeScreen({
+  onTabChange,
+}: {
+  onTabChange: (tab: string) => void;
+}) {
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col max-h-screen pb-20 overflow-hidden">
       <div className="p-4 text-center">
         <p className="text-sm">홍길동님, 안녕하세요</p>
         <p className="text-xs text-gray-500">12월 3일 금요일</p>
@@ -38,7 +44,10 @@ export default function HomeScreen() {
         <div className="bg-blue-400 text-white rounded-xl p-4 flex items-center justify-center text-lg font-bold min-h-[90px]">
           영수증 인증하기
         </div>
-        <div className="bg-green-400 rounded-xl p-4 flex items-center justify-center text-white font-semibold min-h-[90px]">
+        <div
+          className="bg-green-400 rounded-xl p-4 flex items-center justify-center text-white font-semibold min-h-[90px] cursor-pointer"
+          onClick={() => onTabChange("history")}
+        >
           소비내역
         </div>
         <div className="bg-sky-300 rounded-xl p-4 flex items-center justify-center text-white font-semibold min-h-[90px]">
@@ -49,32 +58,7 @@ export default function HomeScreen() {
         </div>
       </div>
 
-      <nav className="fixed bottom-0 left-0 right-0 flex justify-around max-w-sm py-2 mx-auto text-xs bg-white border-t">
-        <div className="text-center">
-          🏠
-          <br />홈
-        </div>
-        <div className="text-center">
-          📑
-          <br />
-          소비 내역
-        </div>
-        <div className="text-center">
-          ❤️
-          <br />
-          케어
-        </div>
-        <div className="text-center">
-          🛍️
-          <br />
-          스토어
-        </div>
-        <div className="text-center">
-          👤
-          <br />
-          MY
-        </div>
-      </nav>
+      <BottomTab selected="home" onTabChange={onTabChange} />
     </div>
   );
 }
