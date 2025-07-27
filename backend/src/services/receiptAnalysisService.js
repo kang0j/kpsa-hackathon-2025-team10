@@ -33,7 +33,31 @@ The **items** array contains information for each item on the receipt.
 
 **categoryId**: This is the ID of the category to which the product belongs. It can be left empty for future mapping. (null or an empty string)
 
-**healthyScore**: This is the health score for the product. It is evaluated as an integer between -5 ~ 5, with a default value of 0.
+**healthyScore**: This is the health score for the product. It is evaluated as an integer between -5 ~ 5
+
+IMPORTANT:
+
+healthyScore Example:
+
+"
+
+헬스장 정기 이용권 결제 : 5
+
+신선한 채소 및 과일 구매 : 4
+
+종합 비타민 구매 : 3
+
+등산화 구매 : 2
+
+배달 야식 (치킨, 맥주) 주문 : -2
+
+한 달간 매일 탄산음료 1캔 구매 : -4
+
+담배 1갑 구매 : -5
+
+가공식품 : -4
+
+"
 
 **commentByAI**: (IN KROEAN) This is a brief comment from the AI about the product. (e.g., "This is a processed food that requires caution against excessive consumption.")(IN KROEAN)
 
