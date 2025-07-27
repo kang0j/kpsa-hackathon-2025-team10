@@ -76,8 +76,8 @@ model User {
   email                String    @unique
   password             String
   name                 String?
-  birthdate            DateTime?
-  gender               Gender?
+  // birthdate            DateTime?
+  // gender               Gender?
   rewardPoints         Int       @default(0)
   
   // 레벨, 경험치, 랭킹 관련 필드 추가
@@ -92,10 +92,10 @@ model User {
   transactions         Transaction[]
   rewardPointHistories RewardPointHistory[]
   consultations        Consultation[]
-  sentFriendRequests   Friendship[]         @relation("SentFriendships")
+  sentFriendRequests     Friendship[]         @relation("SentFriendships")
   receivedFriendRequests Friendship[]       @relation("ReceivedFriendships")
-  goals                Goal[]
-  userGoods         UserGood[]
+  goals                  Goal[]
+  userGoods              UserGood[]
 
   @@map("users")
 }
@@ -158,10 +158,13 @@ model TransactionItem {
   quantity      Int       @default(1)
   categoryId    String?
   category      Category? @relation(fields: [categoryId], references: [id])
-  isHealthy     Boolean   @default(false)
+  // isHealthy     Boolean   @default(false)
+  healthyScore  Int @default(0)
+  commentByAI   String?
 
   @@map("transaction_items")
 }
+
 
 // 소비 항목 카테고리
 model Category {
@@ -192,7 +195,7 @@ model RewardPointHistory {
 }
 
 // 사용자가 교환할 수 있는 혜택(상품, 쿠폰 등)
-model Good {
+model Goods {
   id             String      @id @default(cuid())
   title          String
   description    String?
@@ -201,7 +204,7 @@ model Good {
   isActive       Boolean     @default(true)
   partnerId      String?
   partner        Partner?    @relation(fields: [partnerId], references: [id])
-  userGoods   UserGood[]
+  userGoods      UserGood[]
 
   @@map("goods")
 }
@@ -211,14 +214,14 @@ model UserGood {
   id          String   @id @default(cuid())
   userId      String
   user        User     @relation(fields: [userId], references: [id])
-  GoodId   String
-  Good     Good  @relation(fields: [GoodId], references: [id])
+  goodId   String
+  good     Goods  @relation(fields: [goodId], references: [id])
   claimedAt   DateTime @default(now())
   usedAt      DateTime?
   couponCode  String?  @unique
 
-  @@index([userId, GoodId])
-  @@map("user_Goods")
+  @@index([userId, goodId])
+  @@map("user_goods")
 }
 
 // =================================
@@ -293,7 +296,7 @@ model Partner {
   id       String      @id @default(cuid())
   name     String      @unique
   type     PartnerType
-  Goods Good[]
+  goods Goods[]
 
   @@map("partners")
 }
