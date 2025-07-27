@@ -30,8 +30,6 @@ interface FoodRecommendationData {
   "ai 추천 사항": string;
 }
 
-
-
 interface Pharmacist {
   id: string;
   name: string;
@@ -80,6 +78,13 @@ export default function CareScreenPremium({
   const [healthAnalysis, setHealthAnalysis] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // 주문하기 함수 추가
+  const handleOrder = (foodName: string) => {
+    const query = encodeURIComponent(foodName);
+    const kurlyUrl = `https://www.kurly.com/search?sword=${query}`;
+    window.open(kurlyUrl, '_blank');
+  };
 
   // 건강 점수 분석 함수들
   const analyzeHealthScores = (transactions: Transaction[]) => {
@@ -141,12 +146,81 @@ export default function CareScreenPremium({
         const jsonMatch = recommendationText.match(/```json\n([\s\S]*?)\n```/);
         
         if (jsonMatch) {
-          const parsedData = JSON.parse(jsonMatch[1]);
-          setFoodRecommendationData(parsedData);
+          try {
+            let jsonString = jsonMatch[1].trim();
+            
+            // 더 안전한 JSON 파싱을 위해 문자열을 정리
+            // 1. 줄바꿈을 공백으로 변경하되, 문자열 내부의 줄바꿈은 \\n으로 처리
+            jsonString = jsonString.replace(/"\s*:\s*"/g, '": "'); // 콜론 주변 공백 정리
+            jsonString = jsonString.replace(/,\s*\n\s*/g, ', '); // 배열/객체 구분자 정리
+            
+            // 문자열 값 내부의 실제 줄바꿈을 이스케이프 처리
+            jsonString = jsonString.replace(/"([^"]*)"(\s*:\s*)"([^"]*(?:\n[^"]*)*[^"]*)"/g, (match, key, colon, value) => {
+              const escapedValue = value.replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t');
+              return `"${key}"${colon}"${escapedValue}"`;
+            });
+            
+            console.log('정리된 JSON 문자열:', jsonString);
+            
+            const parsedData = JSON.parse(jsonString);
+            
+            // 파싱된 데이터에서 이스케이프된 문자를 다시 복원
+            if (parsedData["ai 추천 사항"]) {
+              parsedData["ai 추천 사항"] = parsedData["ai 추천 사항"]
+                .replace(/\\n/g, '\n')
+                .replace(/\\r/g, '\r')
+                .replace(/\\t/g, '\t');
+            }
+            
+            setFoodRecommendationData(parsedData);
+          } catch (parseError) {
+            console.error('JSON 파싱 오류:', parseError);
+            console.log('원본 JSON:', jsonMatch[1]);
+            
+            // JSON 파싱이 실패하면 수동으로 데이터 추출 시도
+            try {
+              const fallbackData = extractDataManually(jsonMatch[1]);
+              if (fallbackData) {
+                setFoodRecommendationData(fallbackData);
+              }
+            } catch (fallbackError) {
+              console.error('수동 데이터 추출도 실패:', fallbackError);
+            }
+          }
         }
       }
     } catch (err) {
       console.error('음식 추천 조회 실패:', err);
+    }
+  };
+
+  // JSON 파싱 실패 시 수동으로 데이터 추출하는 함수
+  const extractDataManually = (jsonString: string): FoodRecommendationData | null => {
+    try {
+      // oneCommand 추출
+      const oneCommandMatch = jsonString.match(/"oneCommand"\s*:\s*"([^"]+)"/);
+      const oneCommand = oneCommandMatch ? oneCommandMatch[1] : "";
+
+      // 맞춤 음식 추천 배열 추출
+      const foodRecommendMatch = jsonString.match(/"맞춤 음식 추천"\s*:\s*\[(.*?)\]/s);
+      let foodRecommendations: string[] = [];
+      if (foodRecommendMatch) {
+        const foodItems = foodRecommendMatch[1].match(/"([^"]+)"/g);
+        foodRecommendations = foodItems ? foodItems.map(item => item.replace(/"/g, '')) : [];
+      }
+
+      // ai 추천 사항 추출
+      const aiRecommendMatch = jsonString.match(/"ai 추천 사항"\s*:\s*"([\s\S]*?)"\s*}/);
+      const aiRecommend = aiRecommendMatch ? aiRecommendMatch[1] : "";
+
+      return {
+        oneCommand,
+        "맞춤 음식 추천": foodRecommendations,
+        "ai 추천 사항": aiRecommend
+      };
+    } catch (error) {
+      console.error('수동 추출 실패:', error);
+      return null;
     }
   };
 
@@ -594,15 +668,18 @@ export default function CareScreenPremium({
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center text-sm text-gray-600">
                           <Store className="w-4 h-4 mr-1" />
-                          <span className="mr-3">근처 매장에서 주문 가능</span>
+                          <span className="mr-3">마켓컬리에서 주문 가능</span>
                           <Truck className="w-4 h-4 mr-1" />
                           <span>빠른 배송</span>
                         </div>
                       </div>
 
-                      <button className="w-full py-2 font-semibold text-white rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 flex items-center justify-center">
+                      <button 
+                        onClick={() => handleOrder(food)}
+                        className="w-full py-2 font-semibold text-white rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 flex items-center justify-center hover:from-blue-700 hover:to-indigo-700 transition-colors"
+                      >
                         <ShoppingCart className="w-4 h-4 mr-2" />
-                        주문하기
+                        마켓컬리에서 주문하기
                       </button>
                     </div>
                   ))}

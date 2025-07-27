@@ -84,7 +84,7 @@ export default function SignupForm({
             <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 rounded-full bg-white/20">
               <User className="w-8 h-8 text-white" />
             </div>
-            <h1 className="mb-2 text-2xl font-bold text-white">건강한 시작</h1>
+            <h1 className="mb-2 text-2xl font-bold text-white">Re:fit</h1>
             <p className="text-sm text-white/80">새로운 건강 여정을 함께해요</p>
           </div>
 

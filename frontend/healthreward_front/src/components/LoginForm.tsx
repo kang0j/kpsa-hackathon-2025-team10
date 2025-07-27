@@ -66,7 +66,7 @@ export default function LoginForm({
             <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 rounded-full bg-white/20">
               <LogIn className="w-8 h-8 text-white" />
             </div>
-            <h1 className="mb-2 text-2xl font-bold text-white">다시 만나요!</h1>
+            <h1 className="mb-2 text-2xl font-bold text-white">Re:fit</h1>
             <p className="text-sm text-white/80">건강한 하루를 시작해볼까요?</p>
           </div>
 
