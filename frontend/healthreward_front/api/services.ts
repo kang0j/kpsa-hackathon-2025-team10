@@ -1,4 +1,4 @@
-// api/services.ts
+// services.ts
 import apiClient from './client';
 
 // 백엔드 API에 맞춘 타입 정의
@@ -82,7 +82,7 @@ export interface SupplementResponse {
 export const authService = {
   // 회원가입
   signup: async (data: SignupData): Promise<User> => {
-    const response = await apiClient.post('/api/auth/signup', data);
+    const response = await apiClient.post('/auth/signup', data);
     return response.data;
   },
 
@@ -94,13 +94,13 @@ export const authService = {
 
   // 로그아웃
   logout: async (): Promise<void> => {
-    await apiClient.post('/api/auth/logout');
+    await apiClient.post('/auth/logout');
     localStorage.removeItem('authToken');
   },
 
   // 현재 사용자 정보 조회
   getCurrentUser: async (): Promise<User> => {
-    const response = await apiClient.get('/api/auth/me');
+    const response = await apiClient.get('/auth/me');
     return response.data;
   }
 };
@@ -108,30 +108,30 @@ export const authService = {
 export const userService = {
   // 사용자 목록 조회
   getUsers: async (): Promise<User[]> => {
-    const response = await apiClient.get('/api/users');
+    const response = await apiClient.get('/users');
     return response.data;
   },
 
   // 사용자 생성
   createUser: async (userData: SignupData): Promise<User> => {
-    const response = await apiClient.post('/api/users', userData);
+    const response = await apiClient.post('/users', userData);
     return response.data;
   },
 
   // 사용자 수정
   updateUser: async (id: string, userData: Partial<User>): Promise<User> => {
-    const response = await apiClient.put(`/api/users/${id}`, userData);
+    const response = await apiClient.put(`/users/${id}`, userData);
     return response.data;
   },
 
   // 사용자 삭제
   deleteUser: async (id: string): Promise<void> => {
-    await apiClient.delete(`/api/users/${id}`);
+    await apiClient.delete(`/users/${id}`);
   },
 
   // 사용자 정보 조회 (포인트 포함)
   getUserInfo: async (userId: string): Promise<User> => {
-    const response = await apiClient.get(`/api/users/${userId}`);
+    const response = await apiClient.get(`/users/${userId}`);
     return response.data;
   }
 };
@@ -142,7 +142,7 @@ export const receiptService = {
     const formData = new FormData();
     formData.append('receiptImage', imageFile);
     
-    const response = await apiClient.post(`/api/receipts/upload/${userId}`, formData, {
+    const response = await apiClient.post(`/receipts/upload/${userId}`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },

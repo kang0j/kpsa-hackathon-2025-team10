@@ -305,40 +305,7 @@ export default function HistoryScreen({
                         )}
                       </div>
 
-                      {/* 건강점수 진행바 */}
-                      <div className="mt-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-medium text-gray-700">
-                            이번 구매 건강도
-                          </span>
-                          <span className="text-sm text-gray-600">
-                            {calculateHealthScore(transaction.items)}%
-                          </span>
-                        </div>
-                        <div className="w-full h-2 bg-gray-200 rounded-full">
-                          <div
-                            className={`h-2 rounded-full transition-all duration-500 ${
-                              calculateHealthScore(transaction.items) >= 70
-                                ? "bg-green-500"
-                                : calculateHealthScore(transaction.items) >= 40
-                                ? "bg-yellow-500"
-                                : "bg-red-500"
-                            }`}
-                            style={{
-                              width: `${Math.max(0, calculateHealthScore(
-                                transaction.items
-                              ))}%`,
-                            }}
-                          ></div>
-                        </div>
-                        <p className="mt-1 text-xs text-gray-500">
-                          {calculateHealthScore(transaction.items) >= 70
-                            ? "매우 건강한 구매입니다! 🌟"
-                            : calculateHealthScore(transaction.items) >= 40
-                            ? "보통 수준의 구매입니다 👍"
-                            : "더 건강한 선택을 해보세요 💪"}
-                        </p>
-                      </div>
+                      
                     </div>
                   </div>
                 ))}

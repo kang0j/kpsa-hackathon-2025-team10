@@ -1,5 +1,8 @@
 import { useState, useEffect } from "react";
+import { RefreshCw } from "lucide-react";
 import BottomTab from "./BottomTab";
+import { transactionService } from "../../api/services";
+import type { Transaction } from "../../api/services";
 
 interface UserProfile {
   name: string;
@@ -7,7 +10,7 @@ interface UserProfile {
   avatar: string;
   plan: "free" | "premium";
   joinDate: string;
-  healthScore: number;
+  totalPoints: number;
   totalExpenses: number;
   healthyExpenses: number;
 }
@@ -32,6 +35,12 @@ export default function MyPageScreen({
   const [isPremiumUser, setIsPremiumUser] = useState(false);
   const [premiumStartDate, setPremiumStartDate] = useState<string | null>(null);
   const [showPlanModal, setShowPlanModal] = useState(false);
+  
+  // 포인트 및 건강 분석 상태
+  const [userPoints, setUserPoints] = useState<number>(0);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [healthAnalysis, setHealthAnalysis] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
 
   // 컴포넌트 마운트 시 localStorage에서 프리미엄 상태 확인
   useEffect(() => {
@@ -42,7 +51,101 @@ export default function MyPageScreen({
       setIsPremiumUser(true);
       setPremiumStartDate(startDate);
     }
+
+    // 데이터 로드
+    fetchUserData();
   }, []);
+
+  // 건강 점수 분석 함수들 (CareScreen과 동일)
+  const analyzeHealthScores = (transactions: Transaction[]) => {
+    let totalGoodScore = 0;
+    let totalBadScore = 0;
+    let totalAmount = 0;
+    let goodAmount = 0;
+    let badAmount = 0;
+    
+    transactions.forEach(transaction => {
+      transaction.items.forEach(item => {
+        const itemTotal = item.price * item.quantity;
+        totalAmount += itemTotal;
+        
+        if (item.healthyScore > 0) {
+          totalGoodScore += item.healthyScore * item.quantity;
+          goodAmount += itemTotal;
+        } else if (item.healthyScore < 0) {
+          totalBadScore += Math.abs(item.healthyScore) * item.quantity;
+          badAmount += itemTotal;
+        }
+        // 0점은 무시
+      });
+    });
+    
+    return {
+      totalGoodScore,
+      totalBadScore,
+      totalAmount,
+      goodAmount,
+      badAmount,
+      neutralAmount: totalAmount - goodAmount - badAmount
+    };
+  };
+
+  // 포인트 API 호출 함수
+  const fetchUserPoints = async () => {
+    const userId = localStorage.getItem('userId') || 'cmdkegz8m0001he9oo6ggnapj';
+    
+    try {
+      const response = await fetch(`https://df779d93eb1b.ngrok-free.app/points/${userId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setUserPoints(data.totalPoints);
+    } catch (error) {
+      console.error('포인트 조회 실패:', error);
+      setUserPoints(0);
+    }
+  };
+
+  // 거래 데이터 및 분석 가져오기
+  const fetchTransactionData = async () => {
+    const userId = localStorage.getItem('userId');
+    if (!userId) return;
+
+    try {
+      const transactionResult = await transactionService.getUserTransactions(userId);
+      setTransactions(transactionResult);
+      
+      // 건강 점수 분석
+      const analysis = analyzeHealthScores(transactionResult);
+      setHealthAnalysis(analysis);
+    } catch (error) {
+      console.error('거래 데이터 조회 실패:', error);
+    }
+  };
+
+  // 모든 사용자 데이터 가져오기
+  const fetchUserData = async () => {
+    setLoading(true);
+    try {
+      await Promise.all([
+        fetchUserPoints(),
+        fetchTransactionData()
+      ]);
+    } catch (error) {
+      console.error('데이터 로드 실패:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // 프리미엄 플랜 해지 처리
   const handleCancelPremium = () => {
@@ -62,16 +165,22 @@ export default function MyPageScreen({
     return nextPayment.toLocaleDateString("ko-KR");
   };
 
-  // 더미 사용자 데이터 (프리미엄 상태에 따라 plan 값 변경)
+  // 건강 소비율 계산
+  const getHealthySpendingRatio = () => {
+    if (!healthAnalysis || healthAnalysis.totalAmount === 0) return 0;
+    return Math.round((healthAnalysis.goodAmount / healthAnalysis.totalAmount) * 100);
+  };
+
+  // 사용자 프로필 데이터
   const userProfile: UserProfile = {
     name: localStorage.getItem("userName") || "사용자",
     email: localStorage.getItem("userEmail") || "example@email.com",
-    avatar: "", // 제거 대상이지만 타입 때문에 일단 빈 문자열 유지
+    avatar: "",
     plan: isPremiumUser ? "premium" : "free",
-    joinDate: "", // 제거 대상
-    healthScore: 87,
-    totalExpenses: 2450000,
-    healthyExpenses: 1560000,
+    joinDate: "",
+    totalPoints: userPoints,
+    totalExpenses: healthAnalysis?.totalAmount || 0,
+    healthyExpenses: healthAnalysis?.goodAmount || 0,
   };
 
   const achievements: Achievement[] = [
@@ -151,31 +260,34 @@ export default function MyPageScreen({
           </div>
         </div>
 
-        {/* 건강 점수 */}
-        <div className="p-4 mb-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-xl">
+        {/* 총 포인트 */}
+        <div className="p-4 mb-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="font-bold text-gray-800">이달의 건강 점수</h3>
-            <span className="text-2xl font-bold text-green-600">
-              {userProfile.healthScore}
+            <h3 className="font-bold text-gray-800">총 포인트</h3>
+            <button 
+              onClick={fetchUserData}
+              className="p-1 text-blue-500 hover:bg-blue-100 rounded"
+              disabled={loading}
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            </button>
+          </div>
+          <div className="text-center">
+            <span className="text-3xl font-bold text-blue-600">
+              {userProfile.totalPoints.toLocaleString()}
             </span>
+            <span className="ml-1 text-lg font-semibold text-blue-500">P</span>
           </div>
-          <div className="w-full h-3 mb-2 bg-gray-200 rounded-full">
-            <div
-              className="h-3 transition-all duration-500 rounded-full bg-gradient-to-r from-green-400 to-blue-500"
-              style={{ width: `${userProfile.healthScore}%` }}
-            ></div>
-          </div>
-          <p className="text-sm text-gray-600">평균보다 15점 높아요! 🎉</p>
+          <p className="mt-2 text-sm text-center text-gray-600">
+            건강한 소비로 포인트를 적립하세요! 🎉
+          </p>
         </div>
 
         {/* 소비 통계 */}
         <div className="grid grid-cols-1 gap-4">
           <div className="p-3 text-center rounded-lg bg-green-50">
             <div className="text-lg font-bold text-green-600">
-              {Math.round(
-                (userProfile.healthyExpenses / userProfile.totalExpenses) * 100
-              )}
-              %
+              {getHealthySpendingRatio()}%
             </div>
             <div className="text-xs text-gray-600">건강 소비율</div>
           </div>
@@ -318,6 +430,32 @@ export default function MyPageScreen({
                 </div>
               </div>
             </div>
+
+            {/* 소비 분석 요약 */}
+            {healthAnalysis && (
+              <div className="p-6 bg-white shadow-sm rounded-xl">
+                <h3 className="mb-4 text-lg font-bold">이달의 소비 분석</h3>
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="text-center p-3 bg-green-100 rounded-lg">
+                    <div className="text-green-700 font-bold text-lg">
+                      {Math.round(healthAnalysis.goodAmount / 10000)}만원
+                    </div>
+                    <div className="text-green-600 text-sm">건강한 소비</div>
+                  </div>
+                  <div className="text-center p-3 bg-gray-100 rounded-lg">
+                    <div className="text-gray-700 font-bold text-lg">
+                      {Math.round(healthAnalysis.totalAmount / 10000)}만원
+                    </div>
+                    <div className="text-gray-600 text-sm">총 소비</div>
+                  </div>
+                </div>
+                <p className="text-sm text-center text-gray-600">
+                  {getHealthySpendingRatio() >= 50 
+                    ? "👍 건강한 소비 습관을 잘 유지하고 있어요!" 
+                    : "💪 건강한 소비를 늘려보세요!"}
+                </p>
+              </div>
+            )}
           </div>
         )}
 

@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { ShoppingCart } from "lucide-react";
+import { useMemo, useState, useEffect } from "react";
+import { ShoppingCart, Crown, Gift, AlertCircle } from "lucide-react";
 import BottomTab from "./BottomTab";
 
 interface Product {
@@ -49,6 +49,86 @@ export default function StoreScreen({
     address: '서울특별시 관악구 관악로 1',
     paymentMethod: 'card'
   });
+
+  // 프리미엄 및 포인트 관련 상태
+  const [isPremiumUser, setIsPremiumUser] = useState(false);
+  const [userPoints, setUserPoints] = useState(0);
+  const [pointsLoading, setPointsLoading] = useState(false);
+  const [usePremiumCoupon, setUsePremiumCoupon] = useState(false);
+  const [usePoints, setUsePoints] = useState(false);
+  const [pointsToUse, setPointsToUse] = useState(0);
+  const [exchangeLoading, setExchangeLoading] = useState(false);
+
+  // 프리미엄 상태 및 포인트 조회
+  useEffect(() => {
+    const premiumStatus = localStorage.getItem('isPremiumUser');
+    setIsPremiumUser(premiumStatus === 'true');
+    
+    if (currentScreen === 'checkout') {
+      fetchUserPoints();
+    }
+  }, [currentScreen]);
+
+  // 포인트 조회 함수
+  const fetchUserPoints = async () => {
+    const userId = localStorage.getItem('userId') || 'cmdkegz8m0001he9oo6ggnapj';
+    
+    try {
+      setPointsLoading(true);
+      const response = await fetch(`https://df779d93eb1b.ngrok-free.app/points/${userId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setUserPoints(data.totalPoints);
+    } catch (error) {
+      console.error('포인트 조회 실패:', error);
+      setUserPoints(0);
+    } finally {
+      setPointsLoading(false);
+    }
+  };
+
+  // 포인트 교환 함수
+  const exchangePoints = async () => {
+    const userId = localStorage.getItem('userId') || 'cmdkegz8m0001he9oo6ggnapj';
+    if (pointsToUse <= 0) return false;
+
+    try {
+      setExchangeLoading(true);
+      const response = await fetch('https://df779d93eb1b.ngrok-free.app/rewards/goods/exchange', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true'
+        },
+        body: JSON.stringify({
+          userId: userId,
+          goodId: cart[0]?.product.id || 'store-purchase' // 첫 번째 상품 ID 또는 기본값
+        })
+      });
+
+      if (response.ok) {
+        return true;
+      } else {
+        throw new Error('포인트 교환 실패');
+      }
+    } catch (error) {
+      console.error('포인트 교환 실패:', error);
+      alert('포인트 사용에 실패했습니다. 다시 시도해주세요.');
+      return false;
+    } finally {
+      setExchangeLoading(false);
+    }
+  };
 
   const products: Product[] = [
     {
@@ -238,6 +318,26 @@ export default function StoreScreen({
     return cart.reduce((total, item) => total + item.quantity, 0);
   };
 
+  // 할인 계산 함수들
+  const getPremiumDiscount = () => {
+    if (!isPremiumUser || !usePremiumCoupon) return 0;
+    return Math.floor(getTotalPrice() * 0.2); // 20% 할인
+  };
+
+  const getPointsDiscount = () => {
+    if (!usePoints) return 0;
+    return Math.min(pointsToUse, getTotalPrice() - getPremiumDiscount());
+  };
+
+  const getFinalPrice = () => {
+    const totalPrice = getTotalPrice();
+    const shippingFee = totalPrice >= 50000 ? 0 : 3000;
+    const premiumDiscount = getPremiumDiscount();
+    const pointsDiscount = getPointsDiscount();
+    
+    return Math.max(0, totalPrice + shippingFee - premiumDiscount - pointsDiscount);
+  };
+
   // 바로 구매
   const buyNow = (product: Product) => {
     setCart([{ product, quantity: 1 }]);
@@ -245,11 +345,23 @@ export default function StoreScreen({
   };
 
   // 주문 완료
-  const completeOrder = () => {
-    // 실제로는 API 호출
+  const completeOrder = async () => {
+    // 포인트 사용 시 교환 API 호출
+    if (usePoints && pointsToUse > 0) {
+      const exchangeSuccess = await exchangePoints();
+      if (!exchangeSuccess) {
+        return; // 포인트 교환 실패 시 주문 중단
+      }
+    }
+
+    // 실제로는 주문 API 호출
     setTimeout(() => {
       setCurrentScreen('success');
       setCart([]);
+      // 사용된 쿠폰과 포인트 초기화
+      setUsePremiumCoupon(false);
+      setUsePoints(false);
+      setPointsToUse(0);
     }, 1000);
   };
 
@@ -283,7 +395,9 @@ export default function StoreScreen({
   if (currentScreen === 'checkout') {
     const totalPrice = getTotalPrice();
     const shippingFee = totalPrice >= 50000 ? 0 : 3000;
-    const finalPrice = totalPrice + shippingFee;
+    const premiumDiscount = getPremiumDiscount();
+    const pointsDiscount = getPointsDiscount();
+    const finalPrice = getFinalPrice();
 
     return (
       <div className="flex flex-col min-h-screen bg-gray-50">
@@ -322,6 +436,103 @@ export default function StoreScreen({
             ))}
           </div>
 
+          {/* 프리미엄 쿠폰 */}
+          {isPremiumUser && (
+            <div className="bg-gradient-to-r from-purple-50 to-blue-50 p-4 rounded-xl border border-purple-200">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center">
+                  <Crown className="w-5 h-5 text-purple-600 mr-2" />
+                  <h3 className="font-bold text-purple-800">프리미엄 전용 쿠폰</h3>
+                </div>
+                <span className="bg-purple-500 text-white px-3 py-1 rounded-full text-xs font-bold">
+                  20% 할인
+                </span>
+              </div>
+              <p className="text-sm text-purple-600 mb-3">
+                프리미엄 회원님만을 위한 특별 할인 혜택입니다.
+              </p>
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={usePremiumCoupon}
+                  onChange={(e) => setUsePremiumCoupon(e.target.checked)}
+                  className="mr-3 w-4 h-4"
+                />
+                <span className="text-sm font-semibold">
+                  20% 할인 쿠폰 사용 (-₩{Math.floor(totalPrice * 0.2).toLocaleString()})
+                </span>
+              </label>
+            </div>
+          )}
+
+          {/* 포인트 사용 */}
+          <div className="bg-white p-4 rounded-xl border border-blue-200">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center">
+                <Gift className="w-5 h-5 text-blue-600 mr-2" />
+                <h3 className="font-bold">포인트 사용</h3>
+              </div>
+              {pointsLoading ? (
+                <div className="text-sm text-gray-500">로딩중...</div>
+              ) : (
+                <span className="text-sm text-blue-600 font-bold">
+                  보유: {userPoints.toLocaleString()}P
+                </span>
+              )}
+            </div>
+            
+            <label className="flex items-center cursor-pointer mb-3">
+              <input
+                type="checkbox"
+                checked={usePoints}
+                onChange={(e) => {
+                  setUsePoints(e.target.checked);
+                  if (!e.target.checked) {
+                    setPointsToUse(0);
+                  }
+                }}
+                className="mr-3 w-4 h-4"
+              />
+              <span className="text-sm font-semibold">포인트 사용하기</span>
+            </label>
+
+            {usePoints && (
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="number"
+                    placeholder="사용할 포인트"
+                    value={pointsToUse || ''}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value) || 0;
+                      const maxPoints = Math.min(userPoints, totalPrice - premiumDiscount);
+                      setPointsToUse(Math.min(value, maxPoints));
+                    }}
+                    className="flex-1 p-2 border rounded-lg text-sm"
+                    max={Math.min(userPoints, totalPrice - premiumDiscount)}
+                  />
+                  <button
+                    onClick={() => {
+                      const maxPoints = Math.min(userPoints, totalPrice - premiumDiscount);
+                      setPointsToUse(maxPoints);
+                    }}
+                    className="px-3 py-2 bg-blue-500 text-white rounded-lg text-sm"
+                  >
+                    전액사용
+                  </button>
+                </div>
+                <p className="text-xs text-gray-500">
+                  최대 {Math.min(userPoints, totalPrice - premiumDiscount).toLocaleString()}P까지 사용 가능
+                </p>
+                {pointsToUse > 0 && (
+                  <p className="text-sm text-blue-600 font-semibold">
+                    사용 포인트: -{pointsToUse.toLocaleString()}P
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+
           {/* 배송 정보 */}
           <div className="bg-white p-4 rounded-xl">
             <h2 className="font-bold mb-3">배송 정보</h2>
@@ -354,9 +565,9 @@ export default function StoreScreen({
             <h2 className="font-bold mb-3">결제 방법</h2>
             <div className="space-y-2">
               {[
-                { id: 'card', name: '신용카드', icon: '' },
-                { id: 'bank', name: '계좌이체', icon: '' },
-                { id: 'kakao', name: '카카오페이', icon: '' }
+                { id: 'card', name: '신용카드', icon: '💳' },
+                { id: 'bank', name: '계좌이체', icon: '🏦' },
+                { id: 'kakao', name: '카카오페이', icon: '💛' }
               ].map(method => (
                 <label key={method.id} className="flex items-center p-3 bg-gray-50 rounded-lg cursor-pointer">
                   <input
@@ -388,6 +599,18 @@ export default function StoreScreen({
                   {shippingFee === 0 ? '무료' : `₩${shippingFee.toLocaleString()}`}
                 </span>
               </div>
+              {premiumDiscount > 0 && (
+                <div className="flex justify-between text-purple-600">
+                  <span>프리미엄 쿠폰 할인</span>
+                  <span>-₩{premiumDiscount.toLocaleString()}</span>
+                </div>
+              )}
+              {pointsDiscount > 0 && (
+                <div className="flex justify-between text-blue-600">
+                  <span>포인트 사용</span>
+                  <span>-₩{pointsDiscount.toLocaleString()}</span>
+                </div>
+              )}
               {totalPrice < 50000 && (
                 <p className="text-xs text-gray-500">5만원 이상 구매 시 무료배송</p>
               )}
@@ -404,10 +627,10 @@ export default function StoreScreen({
         <div className="p-4 bg-white border-t">
           <button
             onClick={completeOrder}
-            disabled={!orderInfo.name || !orderInfo.phone || !orderInfo.address}
+            disabled={!orderInfo.name || !orderInfo.phone || !orderInfo.address || exchangeLoading}
             className="w-full py-4 bg-blue-600 text-white font-bold rounded-xl disabled:bg-gray-300"
           >
-            ₩{finalPrice.toLocaleString()} 결제하기
+            {exchangeLoading ? '처리 중...' : `₩${finalPrice.toLocaleString()} 결제하기`}
           </button>
         </div>
       </div>

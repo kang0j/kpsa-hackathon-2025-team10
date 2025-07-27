@@ -30,7 +30,7 @@ export default function HomeScreen({
 }) {
   const [showPremiumAd, setShowPremiumAd] = useState(true);
   const [completedTip, setCompletedTip] = useState(false);
-  const [userPoints, setUserPoints] = useState<number>(530);
+  const [userPoints, setUserPoints] = useState<number>(0);
   const [loading, setLoading] = useState(false);
 
   // 영수증 업로드 관련 상태
@@ -44,17 +44,30 @@ export default function HomeScreen({
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // 사용자 포인트 조회
+  // 포인트 API 호출 함수
   const fetchUserPoints = async () => {
-    const userId = localStorage.getItem('userId');
-    if (!userId) return;
-
+    const userId = localStorage.getItem('userId') || 'cmdkegz8m0001he9oo6ggnapj';
+    
     try {
       setLoading(true);
-      const userInfo = await userService.getUserInfo(userId);
-      setUserPoints(userInfo.rewardPoints);
+      const response = await fetch(`https://df779d93eb1b.ngrok-free.app/points/${userId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setUserPoints(data.totalPoints);
     } catch (error) {
       console.error('포인트 조회 실패:', error);
+      // 에러 발생 시 기본값 유지하고 사용자에게 알림
+      setUserPoints(0);
     } finally {
       setLoading(false);
     }
@@ -142,6 +155,9 @@ export default function HomeScreen({
       setUploadResult(result);
       setShowUploadModal(false);
       setShowResultModal(true);
+      
+      // 영수증 업로드 후 포인트 새로고침
+      await fetchUserPoints();
     } catch (error: any) {
       console.error("영수증 업로드 실패:", error);
       if (error.response?.status === 400) {
@@ -199,6 +215,7 @@ export default function HomeScreen({
             onClick={fetchUserPoints}
             className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
             disabled={loading}
+            title="포인트 새로고침"
           >
             <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
           </button>
