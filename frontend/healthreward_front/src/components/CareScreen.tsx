@@ -523,7 +523,7 @@ export default function CareScreen({
                 onClick={handlePremiumUpgrade}
                 className="px-8 py-3 text-lg font-bold text-white transition-shadow rounded-full shadow-lg bg-gradient-to-r from-purple-600 to-blue-600 hover:shadow-xl"
               >
-                월 9,900원으로 시작하기
+                월 6,900원으로 시작하기
               </button>
               <p className="mt-2 text-xs text-gray-500">첫 7일 무료 체험</p>
             </div>

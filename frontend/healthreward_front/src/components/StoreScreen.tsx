@@ -858,7 +858,7 @@ export default function StoreScreen({
       {/* 헤더 */}
       <div className="px-6 py-4 pt-8 bg-white">
         <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-bold">건강 스토어</h1>
+          <h1 className="text-2xl font-bold">Re:fit 스토어</h1>
           <div
             onClick={() => setCurrentScreen('cart')}
             className="cursor-pointer relative"

@@ -303,12 +303,12 @@ export default function HomeScreen({
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-xs line-through opacity-90">
-                  월 14,900원
+                  월 9,900원
                 </div>
                 <div className="text-lg font-bold">
-                  월 9,900원
+                  월 6,900원
                   <span className="text-xs ml-1 bg-red-500 px-2 py-0.5 rounded">
-                    33% 할인
+                    30% 할인
                   </span>
                 </div>
               </div>
