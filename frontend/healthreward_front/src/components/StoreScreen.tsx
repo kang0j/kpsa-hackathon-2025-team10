@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from "react";
-import { ShoppingCart, Crown, Gift, AlertCircle } from "lucide-react";
+import { ShoppingCart, Crown, Gift } from "lucide-react";
 import BottomTab from "./BottomTab";
 
 interface Product {
@@ -749,12 +749,7 @@ export default function StoreScreen({
             onClick={() => setCurrentScreen('cart')}
             className="absolute right-4 cursor-pointer relative"
           >
-            <ShoppingCart className="w-6 h-6" />
-            {getTotalItems() > 0 && (
-              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                {getTotalItems()}
-              </span>
-            )}
+
           </div>
         </div>
 

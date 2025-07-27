@@ -113,11 +113,11 @@ export default function HistoryScreen({
   };
 
   // 건강 점수 계산 (평균)
-  const calculateHealthScore = (items: ReceiptItem[]) => {
-    if (items.length === 0) return 0;
-    const totalScore = items.reduce((sum, item) => sum + item.healthyScore, 0);
-    return Math.round(totalScore / items.length);
-  };
+  // const calculateHealthScore = (items: ReceiptItem[]) => {
+  //   if (items.length === 0) return 0;
+  //   const totalScore = items.reduce((sum, item) => sum + item.healthyScore, 0);
+  //   return Math.round(totalScore / items.length);
+  // };
 
   const selectedDateTransactions = getTransactionsForDate(selectedDate);
   const transactionDates = getTransactionDates();

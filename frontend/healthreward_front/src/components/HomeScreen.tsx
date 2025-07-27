@@ -19,7 +19,7 @@ import {
   Newspaper,
 } from "lucide-react";
 import BottomTab from "./BottomTab";
-import { receiptService, userService } from "../../api/services";
+import { receiptService } from "../../api/services";
 
 export default function HomeScreen({
   onTabChange,

@@ -38,7 +38,7 @@ export default function MyPageScreen({
   
   // 포인트 및 건강 분석 상태
   const [userPoints, setUserPoints] = useState<number>(0);
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  // const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [healthAnalysis, setHealthAnalysis] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
@@ -122,7 +122,7 @@ export default function MyPageScreen({
 
     try {
       const transactionResult = await transactionService.getUserTransactions(userId);
-      setTransactions(transactionResult);
+      // setTransactions(transactionResult);
       
       // 건강 점수 분석
       const analysis = analyzeHealthScores(transactionResult);

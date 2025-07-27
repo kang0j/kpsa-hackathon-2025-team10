@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import LoginForm from "./components/LoginForm";
-import SignupForm from "./components/SignUpForm";
+import SignupForm from "./components/SignupForm";
 import HomeScreen from "./components/HomeScreen";
 import HistoryScreen from "./components/HistoryScreen";
 import CareScreen from "./components/CareScreen";

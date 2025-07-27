@@ -14,7 +14,7 @@ export default function CareScreen({
   const [isPremiumUser, setIsPremiumUser] = useState(false);
   const [supplementData, setSupplementData] =
     useState<SupplementRecommendation | null>(null);
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  // const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [healthAnalysis, setHealthAnalysis] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -102,7 +102,7 @@ export default function CareScreen({
       ]);
 
       setSupplementData(supplementResult);
-      setTransactions(transactionResult);
+      // setTransactions(transactionResult);
 
       // 건강 점수 분석
       const analysis = analyzeHealthScores(transactionResult);

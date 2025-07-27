@@ -16,7 +16,6 @@ import {
   Store,
   Truck,
   User,
-  X,
   RefreshCw,
   AlertCircle,
   Pill
@@ -77,7 +76,7 @@ export default function CareScreenPremium({
   // API 연결을 위한 상태들
   const [supplementData, setSupplementData] = useState<SupplementRecommendation | null>(null);
   const [foodRecommendationData, setFoodRecommendationData] = useState<FoodRecommendationData | null>(null);
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  // const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [healthAnalysis, setHealthAnalysis] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -171,7 +170,7 @@ export default function CareScreenPremium({
       ]);
       
       setSupplementData(supplementResult);
-      setTransactions(transactionResult);
+      // setTransactions(transactionResult);
       
       // 음식 추천 데이터도 가져오기
       await fetchFoodRecommendation(userId);
