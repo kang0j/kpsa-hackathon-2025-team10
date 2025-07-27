@@ -92,10 +92,10 @@ model User {
   transactions         Transaction[]
   rewardPointHistories RewardPointHistory[]
   consultations        Consultation[]
-  sentFriendRequests   Friendship[]         @relation("SentFriendships")
+  sentFriendRequests     Friendship[]         @relation("SentFriendships")
   receivedFriendRequests Friendship[]       @relation("ReceivedFriendships")
-  goals                Goal[]
-  userGoods         UserGood[]
+  goals                  Goal[]
+  userGoods              UserGood[]
 
   @@map("users")
 }

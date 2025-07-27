@@ -260,6 +260,77 @@ router.post('/goods/exchange', async (req, res) => {
     }
 });
 
+router.post('/test', async (req, res) => {
+    const { userId, points } = req.body;
+
+    try {
+        const result = await prisma.$transaction(async (tx) => {
+            // 1. 사용자 정보와 굿즈 정보를 동시에 조회합니다.
+            const user = await tx.user.findUnique({ where: { id: userId } });
+            // const good = await tx.goods.findUnique({ where: { id: goodId } });
+
+            if (!user) {
+                throw new Error('사용자를 찾을 수 없습니다.');
+            }
+            // if (!good) {
+            //     throw new Error('굿즈를 찾을 수 없습니다.');
+            // }
+            // if (!good.isActive) {
+            //     throw new Error('현재 교환할 수 없는 굿즈입니다.');
+            // }
+
+            // // 2. 사용자의 포인트가 충분한지 확인합니다.
+            // if (user.rewardPoints < good.pointsRequired) {
+            //     throw new Error('포인트가 부족합니다.');
+            // }
+
+            // 3. 사용자의 포인트를 차감합니다.
+            const updatedUser = await tx.user.update({
+                where: { id: userId },
+                data: {
+                    rewardPoints: {
+                        decrement: points,
+                    },
+                },
+            });
+
+            // 4. 사용자가 획득한 굿즈 내역(UserGood)을 생성합니다.
+            const userGood = await tx.userGood.create({
+                data: {
+                    userId: userId,
+                    goodId: goodId,
+                    // 쿠폰인 경우, 간단한 유니크 코드 생성 (실제 서비스에서는 더 복잡한 로직 필요)
+                    couponCode: good.type === 'COUPON' ? `C-${Date.now()}-${userId.slice(0, 4)}` : null,
+                },
+            });
+
+            // 5. 포인트 사용 내역(RewardPointHistory)을 기록합니다.
+            await tx.rewardPointHistory.create({
+                data: {
+                    userId: userId,
+                    points: -good.pointsRequired, // 사용했으므로 음수
+                    reason: `굿즈 교환`,
+                },
+            });
+
+            return { userGood };
+        });
+
+        res.status(200).json({
+            message: '굿즈 교환이 완료되었습니다.'
+        });
+
+    } catch (error) {
+        // 트랜잭션 내에서 발생한 에러를 클라이언트에 전달
+        if (error.message.includes('찾을 수 없습니다') || error.message.includes('포인트가 부족합니다')) {
+            return res.status(400).json({ error: error.message });
+        }
+        console.error('굿즈 교환 중 오류 발생:', error);
+        res.status(500).json({ error: '서버 오류가 발생했습니다.' });
+    }
+});
+
+
 router.get('/history/:userId', async (req, res) => {
     const { userId } = req.params;
     try {
