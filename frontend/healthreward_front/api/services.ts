@@ -82,7 +82,7 @@ export interface SupplementResponse {
 export const authService = {
   // 회원가입
   signup: async (data: SignupData): Promise<User> => {
-    const response = await apiClient.post('/auth/signup', data);
+    const response = await apiClient.post('/users', data);
     return response.data;
   },
 

@@ -336,7 +336,7 @@ export default function HomeScreen({
       </div>
 
       {/* 버튼 그리드 */}
-      <div className="grid grid-cols-2 gap-4 px-4 mb-6">
+      <div className="grid grid-cols-2 gap-3 px-4 mb-6">
         {/* 영수증 인증하기 - 큰 왼쪽 버튼 */}
         <div className="relative col-span-1 row-span-2">
           <div

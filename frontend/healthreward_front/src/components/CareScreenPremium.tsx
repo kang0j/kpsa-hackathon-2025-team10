@@ -155,7 +155,7 @@ export default function CareScreenPremium({
             jsonString = jsonString.replace(/,\s*\n\s*/g, ', '); // 배열/객체 구분자 정리
             
             // 문자열 값 내부의 실제 줄바꿈을 이스케이프 처리
-            jsonString = jsonString.replace(/"([^"]*)"(\s*:\s*)"([^"]*(?:\n[^"]*)*[^"]*)"/g, (match, key, colon, value) => {
+            jsonString = jsonString.replace(/"([^"]*)"(\s*:\s*)"([^"]*(?:\n[^"]*)*[^"]*)"/g, (_: string, key: string, colon: string, value: string) => {
               const escapedValue = value.replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t');
               return `"${key}"${colon}"${escapedValue}"`;
             });
