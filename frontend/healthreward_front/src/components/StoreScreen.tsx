@@ -59,6 +59,9 @@ export default function StoreScreen({
   const [pointsToUse, setPointsToUse] = useState(0);
   const [exchangeLoading, setExchangeLoading] = useState(false);
 
+  // API 기본 URL
+  const API_BASE_URL = 'https://df779d93eb1b.ngrok-free.app';
+
   // 프리미엄 상태 및 포인트 조회
   useEffect(() => {
     const premiumStatus = localStorage.getItem('isPremiumUser');
@@ -75,7 +78,7 @@ export default function StoreScreen({
     
     try {
       setPointsLoading(true);
-      const response = await fetch(`https://df779d93eb1b.ngrok-free.app/points/${userId}`, {
+      const response = await fetch(`${API_BASE_URL}/points/${userId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -104,7 +107,7 @@ export default function StoreScreen({
 
     try {
       setExchangeLoading(true);
-      const response = await fetch('https://df779d93eb1b.ngrok-free.app/rewards/goods/exchange', {
+      const response = await fetch(`${API_BASE_URL}/rewards/test`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -112,7 +115,7 @@ export default function StoreScreen({
         },
         body: JSON.stringify({
           userId: userId,
-          goodId: cart[0]?.product.id || 'store-purchase' // 첫 번째 상품 ID 또는 기본값
+          points: pointsToUse
         })
       });
 
@@ -565,9 +568,9 @@ export default function StoreScreen({
             <h2 className="font-bold mb-3">결제 방법</h2>
             <div className="space-y-2">
               {[
-                { id: 'card', name: '신용카드', icon: '💳' },
-                { id: 'bank', name: '계좌이체', icon: '🏦' },
-                { id: 'kakao', name: '카카오페이', icon: '💛' }
+                { id: 'card', name: '신용카드', icon: '' },
+                { id: 'bank', name: '계좌이체', icon: '' },
+                { id: 'kakao', name: '카카오페이', icon: '' }
               ].map(method => (
                 <label key={method.id} className="flex items-center p-3 bg-gray-50 rounded-lg cursor-pointer">
                   <input
