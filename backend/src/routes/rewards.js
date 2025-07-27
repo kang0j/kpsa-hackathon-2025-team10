@@ -174,6 +174,8 @@ const prisma = new PrismaClient();
  */
 
 
+
+
 router.get('/goods', async (req, res) => {
     try {
         const goods = await prisma.goods.findMany({
@@ -294,26 +296,24 @@ router.post('/test', async (req, res) => {
                 },
             });
 
-            // 4. 사용자가 획득한 굿즈 내역(UserGood)을 생성합니다.
-            const userGood = await tx.userGood.create({
-                data: {
-                    userId: userId,
-                    goodId: goodId,
-                    // 쿠폰인 경우, 간단한 유니크 코드 생성 (실제 서비스에서는 더 복잡한 로직 필요)
-                    couponCode: good.type === 'COUPON' ? `C-${Date.now()}-${userId.slice(0, 4)}` : null,
-                },
-            });
+            // // 4. 사용자가 획득한 굿즈 내역(UserGood)을 생성합니다.
+            // const userGood = await tx.userGood.create({
+            //     data: {
+            //         userId: userId,
+            //         goodId: goodId,
+            //         // 쿠폰인 경우, 간단한 유니크 코드 생성 (실제 서비스에서는 더 복잡한 로직 필요)
+            //         couponCode: good.type === 'COUPON' ? `C-${Date.now()}-${userId.slice(0, 4)}` : null,
+            //     },
+            // });
 
             // 5. 포인트 사용 내역(RewardPointHistory)을 기록합니다.
             await tx.rewardPointHistory.create({
                 data: {
                     userId: userId,
-                    points: -good.pointsRequired, // 사용했으므로 음수
+                    points: -points, // 사용했으므로 음수
                     reason: `굿즈 교환`,
                 },
             });
-
-            return { userGood };
         });
 
         res.status(200).json({

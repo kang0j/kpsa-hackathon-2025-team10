@@ -64,7 +64,6 @@ JSON
   "ai 추천 사항": ""
 }
 이제 아래 소비 내역을 분석하고 결과를 JSON으로만 출력하라.
-
 `
 
 foodRecommendation = 
@@ -175,14 +174,16 @@ async function getAiRecommendation(userId, recommendationType) {
                 },
                 {
                     role: 'user',
-                    content: `나의 소비 데이터를 바탕으로 ${recommendationType}을 추천해줘. JSON으로 출력하라`
+                    content: `나의 소비 데이터를 바탕으로 ${recommendationType}을 JSON으로 출력하라`
                 },
             ],
             temperature: 0.7,
             max_tokens: 500,
         });
 
-        return completion.choices[0].message.content.trim();
+        const result = completion.choices[0].message.content.trim();
+        console.log(result)
+        return result;
     } catch (error) {
         console.error('Error calling OpenAI API:', error);
         throw new Error('AI 상담 내용을 생성하는 데 실패했습니다.');
